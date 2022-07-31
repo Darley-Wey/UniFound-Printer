@@ -63,7 +63,6 @@ class PrinterActivity : ComponentActivity() {
                 input?.close()
                 val file = File(filesDir, fileName)
                 val filePart = MultipartBody.Part.createFormData(
-//                    "filename",
                     "szPath",
                     file.name,
                     RequestBody.create(type?.let { MediaType.parse(it) }, file)
@@ -98,10 +97,6 @@ class PrinterActivity : ComponentActivity() {
                 val upFile = RequestBody.create(MediaType.parse("multipart/form-data"), file)
                 query = UploadData(
                     filePart,
-//                    ,
-//                    requestBodyMap
-//                    file,
-//                    "-1", "1", "1", "0", "1", "", "0"
                     dwPaperId,
                     dwDuplex,
                     dwColor,
@@ -113,22 +108,7 @@ class PrinterActivity : ComponentActivity() {
                 val viewModel by lazy {
                     ViewModelProvider(this)[PrinterViewModel::class.java]
                 }
-                /*viewModel.getSzToken()
-                viewModel.szTokenLiveData.observe(this) {
-                    val szToken = it.getOrNull()
-                    if (szToken != null) {
-                        viewModel.szToken = szToken
-                    }
-                    println("place: $szToken")
-                }*/
-                /*viewModel.login("21218247", "130952")
-                viewModel.loginLiveData.observe(this) {
-                    val login = it.getOrNull()
-                    if (login != null) {
-                        viewModel.szTrueName = login.result.szTrueName
-                    }
-                    println("place: $login")
-                }*/
+
                 viewModel.upload(query)
                 viewModel.uploadResponseLiveData.observe(this) {
                     val upload = it.getOrNull()

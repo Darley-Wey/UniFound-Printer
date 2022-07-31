@@ -10,33 +10,27 @@ class UnifoundCookie : CookieJar {
         val cookies = cookieStore[url.host()]
         println("reqCookies: $cookies")
         return cookies ?: ArrayList()
-//        if (cookies != null) {
-//            return cookies.toList()
-//        }
-//        return emptyList()
     }
 
     override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        if (cookies.size == 2) {
+        // 返回超过一个cookies时，刷新cookie
+        if (cookies.size > 1) {
             cookieStore[url.host()] = cookies
         }
-//        cookieStore[url.host()].add(Set(cookies))
         println("resCookies: $cookies")
     }
 }
 
 //object 单例类
 object ServiceCreator {
+    // 创建一个okHttpClient对象，用于管理cookie
     private val client = OkHttpClient.Builder().cookieJar(UnifoundCookie()).build()
 
     private const val BASE_URL = "http://10.135.0.139:9130/"
-//    private val request = Request.Builder().url(BASE_URL + "/api/client/Auth/GetAuthToken").build()
-//    val response = client.newCall(request).execute()
-//    val token = response.body()?.string() ?: ""
-
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL).client(client)
+        .baseUrl(BASE_URL)
+        .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

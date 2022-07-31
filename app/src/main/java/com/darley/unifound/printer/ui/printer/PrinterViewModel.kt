@@ -1,36 +1,30 @@
 package com.darley.unifound.printer.ui.printer
 
-import androidx.compose.ui.input.key.Key.Companion.Search
-import androidx.compose.ui.text.input.ImeAction.Companion.Search
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.darley.unifound.printer.data.Repository
 import com.darley.unifound.printer.data.network.UploadData
-import com.darley.unifound.printer.data.network.User
 
 class PrinterViewModel : ViewModel() {
-    private val searchLiveData = MutableLiveData<String>()
 
     /*var szToken = ""
     val szTokenLiveData = Transformations.switchMap(searchLiveData) {
         Repository.getSzToken()
     }
-
-    fun getSzToken() {
-        searchLiveData.value = ""
-    }*/
-    private val userLiveData = MutableLiveData<User>()
-    private val uploadLiveData = MutableLiveData<UploadData>()
+    private val loginUserLiveData = MutableLiveData<LogInUser>()
     var szTrueName = ""
-    val loginLiveData = Transformations.switchMap(userLiveData) {
+    val loginResponseLiveData = Transformations.switchMap(loginUserLiveData) {
         Repository.login(it.username, it.password)
     }
+    fun login(username: String, password: String) {
+        loginUserLiveData.value = LogInUser(username, password)
+    }
+    */
+    private val uploadLiveData = MutableLiveData<UploadData>()
     val uploadResponseLiveData = Transformations.switchMap(uploadLiveData) {
         Repository.upload(
             it.file,
-//            it.map
-//            /*it.file,
             it.dwPaperId,
             it.dwDuplex,
             it.dwColor,
@@ -39,10 +33,6 @@ class PrinterViewModel : ViewModel() {
             it.BackURL,
             it.dwTo
         )
-    }
-
-    fun login(username: String, password: String) {
-        userLiveData.value = User(username, password)
     }
 
     fun upload(data: UploadData) {

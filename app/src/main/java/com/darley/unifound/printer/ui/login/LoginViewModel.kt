@@ -1,13 +1,16 @@
 package com.darley.unifound.printer.ui.login
 
+import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
-import android.util.Patterns
-import com.darley.unifound.printer.data.LoginRepository
-import com.darley.unifound.printer.data.Result
-
 import com.darley.unifound.printer.R
+import com.darley.unifound.printer.data.LoginRepository
+import com.darley.unifound.printer.data.Repository
+import com.darley.unifound.printer.data.model.LoggedInUser
+import com.darley.unifound.printer.data.model.LoginInfo
+import com.darley.unifound.printer.data.network.LoginResponse
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
 
@@ -16,17 +19,35 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
 
     private val _loginResult = MutableLiveData<LoginResult>()
     val loginResult: LiveData<LoginResult> = _loginResult
+    private val loginInfoLiveData = MutableLiveData<LoginInfo>()
 
+    fun saveUser(user: LoggedInUser) = loginRepository.saveUser(user)
+    fun getSavedUser() = loginRepository.getSavedUser()
+    fun isUserSaved() = loginRepository.isUserSaved()
+
+    //    private val loginResult = MutableLiveData<LoginResponse>()
+    val loginLiveData = Transformations.switchMap(loginInfoLiveData) {
+        Repository.login(it.username, it.password)
+//        loginRepository.login(it.username, it.password)
+    }
+
+    // value变化时触发对应的事件
     fun login(username: String, password: String) {
-        // can be launched in a separate asynchronous job
-        val result = loginRepository.login(username, password)
+        loginInfoLiveData.value = LoginInfo(username, password)
+    }
 
-        if (result is Result.Success) {
-            _loginResult.value = LoginResult(success = LoggedInUserView(displayName = result.data.displayName))
+    fun loginResult(loginResponse: LoginResponse) {
+        // can be launched in a separate asynchronous job
+        val code = loginResponse.code
+        val result = loginResponse.result
+        if (code == 0) {
+            _loginResult.value =
+                LoginResult(success = LoggedInUserView(displayName = result.szTrueName))
         } else {
             _loginResult.value = LoginResult(error = R.string.login_failed)
         }
     }
+
 
     fun loginDataChanged(username: String, password: String) {
         if (!isUserNameValid(username)) {

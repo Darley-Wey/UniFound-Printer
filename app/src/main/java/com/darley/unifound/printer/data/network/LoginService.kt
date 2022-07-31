@@ -6,11 +6,6 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
-data class User(
-    val username: String,
-    val password: String
-)
-
 data class LoginData(
     val szLogonName: String,
     val szPassword: String,

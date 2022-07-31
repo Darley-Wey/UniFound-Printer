@@ -20,9 +20,6 @@ object PrinterNetwork {
     suspend fun login(data: LoginData) = loginService.login(data).await()
     suspend fun upload(
         file: MultipartBody.Part,
-//        map: Map<RequestBody, RequestBody>
-//        file: RequestBody,
-//        /*file: File,
         dwPaperId: RequestBody,
         dwDuplex: RequestBody,
         dwColor: RequestBody,
@@ -31,10 +28,7 @@ object PrinterNetwork {
         BackURL: RequestBody,
         dwTo: RequestBody
     ) = uploadService.upload(
-//        file,
-//        map
-        file,
-        dwPaperId, dwDuplex, dwColor, dwFrom, dwCopies, BackURL, dwTo
+        file, dwPaperId, dwDuplex, dwColor, dwFrom, dwCopies, BackURL, dwTo
     ).await()
 
     private suspend fun <T> Call<T>.await(): T {

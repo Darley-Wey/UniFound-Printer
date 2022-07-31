@@ -21,9 +21,6 @@ data class UploadResponse(
 
 data class UploadData(
     val file: MultipartBody.Part,
-//    val map: Map<String, RequestBody>
-//    val file: RequestBody,
-//    /*val file: File,
     val dwPaperId: RequestBody,
     val dwDuplex: RequestBody,
     val dwColor: RequestBody,
@@ -39,7 +36,6 @@ interface UploadService {
     fun upload(
         @Part file: MultipartBody.Part,
 //        @PartMap map: Map<String, RequestBody>
-//        /*@Part("szPath") file: File,
         @Part("dwPaperId") dwPaperId: RequestBody,
         @Part("dwDuplex") dwDuplex: RequestBody,
         @Part("dwColor") dwColor: RequestBody,

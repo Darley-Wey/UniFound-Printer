@@ -4,27 +4,29 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.provider.Settings
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.darley.unifound.printer.databinding.ActivityLoginBinding
-
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.darley.unifound.printer.R
+import com.darley.unifound.printer.data.model.LoginInfo
+import com.darley.unifound.printer.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
+
+    //    开启存储权限
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -62,6 +64,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        检查存储权限
         if (ContextCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -69,6 +72,7 @@ class LoginActivity : AppCompatActivity() {
         ) {
             requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 0)
         }
+
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -77,7 +81,8 @@ class LoginActivity : AppCompatActivity() {
         val login = binding.login
         val loading = binding.loading
 
-        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
+        loginViewModel =
+            ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
 
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
@@ -136,8 +141,23 @@ class LoginActivity : AppCompatActivity() {
             }
 
             login.setOnClickListener {
+                val loginInfo = LoginInfo(username.text.toString(), password.text.toString())
                 loading.visibility = View.VISIBLE
                 loginViewModel.login(username.text.toString(), password.text.toString())
+                loginViewModel.loginLiveData.observe(this@LoginActivity) {
+
+                    if (it.isSuccess) {
+                        loginViewModel.loginResult(it.getOrNull()!!)
+                        loading.visibility = View.GONE
+//                        loginViewModel.saveUser(loginInfo)
+                        it.getOrNull()
+                            ?.let { it1 -> LoggedInUserView(it1.result.szTrueName) }
+                            ?.let { it2 -> updateUiWithUser(it2) }
+                    } else {
+                        loading.visibility = View.GONE
+                        showLoginFailed(0)
+                    }
+                }
             }
         }
     }
