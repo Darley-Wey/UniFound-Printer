@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">联创打印</string>
+    <string name="app_name">联创云打印</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
