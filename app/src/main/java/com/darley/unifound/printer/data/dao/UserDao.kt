@@ -21,5 +21,11 @@ object UserDao {
         return Gson().fromJson(user, LoggedInUser::class.java)
     }
 
+    fun rmSavedUser() {
+        sharedPreferences().edit() {
+            remove("user")
+        }
+    }
+
     fun isUserSaved() = sharedPreferences().contains("user")
 }

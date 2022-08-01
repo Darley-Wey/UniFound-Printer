@@ -6,13 +6,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.darley.unifound.printer.R
-import com.darley.unifound.printer.data.LoginRepository
 import com.darley.unifound.printer.data.Repository
 import com.darley.unifound.printer.data.model.LoggedInUser
 import com.darley.unifound.printer.data.model.LoginInfo
 import com.darley.unifound.printer.data.network.LoginResponse
 
-class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
+class LoginViewModel : ViewModel() {
 
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm
@@ -21,9 +20,9 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
     val loginResult: LiveData<LoginResult> = _loginResult
     private val loginInfoLiveData = MutableLiveData<LoginInfo>()
 
-    fun saveUser(user: LoggedInUser) = loginRepository.saveUser(user)
-    fun getSavedUser() = loginRepository.getSavedUser()
-    fun isUserSaved() = loginRepository.isUserSaved()
+    fun saveUser(user: LoggedInUser) = Repository.saveUser(user)
+    fun getSavedUser() = Repository.getSavedUser()
+    fun isUserSaved() = Repository.isUserSaved()
 
     //    private val loginResult = MutableLiveData<LoginResponse>()
     val loginLiveData = Transformations.switchMap(loginInfoLiveData) {
@@ -44,7 +43,7 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
             _loginResult.value =
                 LoginResult(success = LoggedInUserView(displayName = result.szTrueName))
         } else {
-            _loginResult.value = LoginResult(error = R.string.login_failed)
+            _loginResult.value = LoginResult(error = "登陆失败")
         }
     }
 

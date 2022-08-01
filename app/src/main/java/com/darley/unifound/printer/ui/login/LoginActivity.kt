@@ -12,7 +12,6 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -72,18 +71,23 @@ class LoginActivity : AppCompatActivity() {
         ) {
             requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 0)
         }
-
+        /*val webView = WebView(this)
+        webView.settings.javaScriptEnabled = true
+        webView.webViewClient = WebViewClient()
+        webView.loadUrl("http://10.135.0.139:9130/client/new/cprintMobile/login.html")
+        setContentView(webView)*/
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
 
         val username = binding.username
         val password = binding.password
         val login = binding.login
         val loading = binding.loading
 
-        loginViewModel =
-            ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
-
+        //        loginViewModel =
+        //            ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
+        loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
 
@@ -145,17 +149,16 @@ class LoginActivity : AppCompatActivity() {
                 loading.visibility = View.VISIBLE
                 loginViewModel.login(username.text.toString(), password.text.toString())
                 loginViewModel.loginLiveData.observe(this@LoginActivity) {
-
                     if (it.isSuccess) {
                         loginViewModel.loginResult(it.getOrNull()!!)
                         loading.visibility = View.GONE
-//                        loginViewModel.saveUser(loginInfo)
+                        //                        loginViewModel.saveUser(loginInfo)
                         it.getOrNull()
                             ?.let { it1 -> LoggedInUserView(it1.result.szTrueName) }
                             ?.let { it2 -> updateUiWithUser(it2) }
                     } else {
                         loading.visibility = View.GONE
-                        showLoginFailed(0)
+                        showLoginFailed("登陆失败，请检查输入或网络连接")
                     }
                 }
             }
@@ -173,8 +176,8 @@ class LoginActivity : AppCompatActivity() {
         ).show()
     }
 
-    private fun showLoginFailed(@StringRes errorString: Int) {
-        Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
+    private fun showLoginFailed(errorString: String) {
+        Toast.makeText(applicationContext, errorString, Toast.LENGTH_LONG).show()
     }
 }
 

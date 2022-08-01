@@ -12,13 +12,19 @@ object LoginInfoDao {
 
     fun saveLoginInfo(user: LoginInfo) {
         sharedPreferences().edit() {
-            putString("user", Gson().toJson(user))
+            putString("login-info", Gson().toJson(user))
         }
     }
 
     fun getLoginInfo(): LoginInfo? {
         val user = sharedPreferences().getString("login-info", null)
         return Gson().fromJson(user, LoginInfo::class.java)
+    }
+
+    fun rmLoginInfo() {
+        sharedPreferences().edit() {
+            remove("login-info")
+        }
     }
 
     fun hasLoginInfo() = sharedPreferences().contains("login-info")
