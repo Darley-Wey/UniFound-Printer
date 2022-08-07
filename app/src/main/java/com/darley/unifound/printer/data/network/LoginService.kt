@@ -1,7 +1,5 @@
 package com.darley.unifound.printer.data.network
 
-//import com.darley.unifound.printer.data.model.AuthTokenResponse
-//import com.darley.unifound.printer.data.model.LoginResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST

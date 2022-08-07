@@ -3,7 +3,6 @@ package com.darley.unifound.printer.data
 import android.util.Log
 import androidx.lifecycle.liveData
 import com.darley.unifound.printer.data.dao.LoginInfoDao
-import com.darley.unifound.printer.data.dao.LoginInfoDao.rmLoginInfo
 import com.darley.unifound.printer.data.dao.UserDao
 import com.darley.unifound.printer.data.model.LoggedInUser
 import com.darley.unifound.printer.data.model.LoginInfo
@@ -12,7 +11,6 @@ import com.darley.unifound.printer.data.network.PrinterNetwork
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import kotlin.Result
 import kotlin.coroutines.CoroutineContext
 
 object Repository {
@@ -65,8 +63,6 @@ object Repository {
         val authTokenResponse = PrinterNetwork.getAuthToken()
         val loginInfo = getLoginInfo()!!
         val loginData = LoginData(
-//                "21218247",
-//                "130952",
             loginInfo.username,
             loginInfo.password,
             authTokenResponse.szToken
@@ -78,11 +74,12 @@ object Repository {
         )
         Log.d("retrofit", uploadResponse.toString())
         println("uploadResponse: $uploadResponse")
-        if (uploadResponse.code == 0) {
+        Result.success(uploadResponse)
+        /*if (uploadResponse.code == 0) {
             Result.success(uploadResponse)
         } else {
             Result.failure(RuntimeException("response code is ${uploadResponse.code}"))
-        }
+        }*/
     }
 
     private fun <T> fire(context: CoroutineContext, block: suspend () -> Result<T>) =
@@ -95,3 +92,8 @@ object Repository {
             emit(result)
         }
 }
+
+sealed class PlayState
+object PlayLoading : PlayState()
+data class PlaySuccess(val data: String) : PlayState()
+data class PlayError(val error: Throwable) : PlayState()

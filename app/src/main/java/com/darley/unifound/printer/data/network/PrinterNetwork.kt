@@ -4,9 +4,6 @@ import android.util.Log
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
-import retrofit2.await
-import retrofit2.http.Part
-import java.io.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -31,12 +28,14 @@ object PrinterNetwork {
         file, dwPaperId, dwDuplex, dwColor, dwFrom, dwCopies, BackURL, dwTo
     ).await()
 
+
     private suspend fun <T> Call<T>.await(): T {
         return suspendCoroutine { continuation ->
             enqueue(object : retrofit2.Callback<T> {
                 override fun onResponse(call: Call<T>, response: retrofit2.Response<T>) {
                     val body = response.body()
-//                    val headers = response.headers()
+//                    val code = response.code()
+//                    TODO if code == 413,文件过大
                     println("onResponse: body = $body")
                     Log.d("PrinterNetwork", "onResponse: body = $body")
                     if (body != null) continuation.resume(body)
