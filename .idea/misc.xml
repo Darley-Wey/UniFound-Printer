@@ -4,7 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/AndroidStudioProjects/Printer/app/src/main/res/drawable/ic_launcher_background.xml" value="0.158" />
+        <entry key="..\:/AndroidStudioProjects/Printer/app/src/main/res/layout-w1240dp/activity_login.xml" value="0.1" />
+        <entry key="..\:/AndroidStudioProjects/Printer/app/src/main/res/layout-w936dp/activity_login.xml" value="0.11015625" />
         <entry key="..\:/AndroidStudioProjects/Printer/app/src/main/res/layout/activity_login.xml" value="0.14895833333333333" />
+        <entry key="..\:/AndroidStudioProjects/Printer/app/src/main/res/layout/activity_receiver.xml" value="0.1" />
       </map>
     </option>
   </component>

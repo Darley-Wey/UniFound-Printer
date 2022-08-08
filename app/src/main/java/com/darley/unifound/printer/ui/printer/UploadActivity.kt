@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.provider.OpenableColumns
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
@@ -66,11 +64,12 @@ class PrinterActivity : ComponentActivity() {
 
     private fun openDirectory() {
         val intent: Intent
-        val viewModel by viewModels<PrinterViewModel>()
+        val viewModel by viewModels<UploadViewModel>()
+        val uri =
+            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !viewModel.hasDataPermission()) {
             // Choose a directory using the system's file picker.
-            val uri =
-                Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata")
+
             intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 // Optionally, specify a URI for the directory that should be opened in
                 // the system file picker when it loads.
@@ -85,12 +84,13 @@ class PrinterActivity : ComponentActivity() {
             }
             startActivityForResult(intent, 0)
         } else {
-            intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            intent = Intent(Intent.ACTION_GET_CONTENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
                 // Optionally, specify a URI for the file that should appear in the
                 // system file picker when it loads.
-//                putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+                /*putExtra(DocumentsContract.EXTRA_INITIAL_URI,
+                    DocumentFile.fromTreeUri(context, uri)?.uri)*/
             }
             startActivityForResult(intent, 1)
         }
@@ -103,7 +103,7 @@ class PrinterActivity : ComponentActivity() {
         requestCode: Int, resultCode: Int, resultData: Intent?,
     ) {
         super.onActivityResult(requestCode, resultCode, resultData)
-        val viewModel by viewModels<PrinterViewModel>()
+        val viewModel by viewModels<UploadViewModel>()
         if (requestCode == 0
             && resultCode == Activity.RESULT_OK
         ) {
@@ -125,6 +125,8 @@ class PrinterActivity : ComponentActivity() {
             resultData?.also { intent ->
                 // Get the file path from the URI.
                 // intent.schema == "content"
+                println("intent.data: ${intent.data}")
+//                println("intent.schema: ${intent.data.schema}")
                 val file = FileUtil.getFile(intent.data!!)
                 viewModel.setFile(file)
                 viewModel.setFileType(intent.type)
@@ -134,13 +136,36 @@ class PrinterActivity : ComponentActivity() {
 
     }
 
+    private fun parseIntent(intent: Intent) {
+        val viewModel by viewModels<UploadViewModel>()
+        viewModel.isParsing.value = true
+        val action = intent.action!!
+        val type = intent.type!!
+        val uri =
+            if (action == Intent.ACTION_VIEW) intent.data!! else intent.getParcelableExtra(Intent.EXTRA_STREAM)!!
+        val schema = uri.scheme!!
+        val file: File? = if (schema == "file"
+        ) uri.toFile() else {
+            // schema == "content"
+            FileUtil.getFile(uri)
+        }
+        viewModel.setFile(file)
+        viewModel.setFileType(type)
+        viewModel.isParsing.value = false
+        Log.d("UploadActivity", "uri: $uri action: $action, type: $type, schema: $schema")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        Intent.Ac
-        /*val action = intent.action!!
-        val type = intent.type!!
-        Log.d("PrinterActivity", "action: $action, type: $type")
+        val vM by viewModels<UploadViewModel>()
+        val action = intent.action
+        if (action == Intent.ACTION_VIEW || action == Intent.ACTION_SEND) {
+            parseIntent(intent)
+        }
+        val type = intent.type
+        Log.d("PrinterActivity", "action: ${vM.uploadFile.value?.name}, type: $type")
+        /*
+
         val uri =
             if (action == Intent.ACTION_VIEW) intent.data!! else intent.getParcelableExtra(Intent.EXTRA_STREAM)!!
 //        val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
@@ -187,7 +212,7 @@ class PrinterActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 val scaffoldState = rememberScaffoldState()
                 val scope = rememberCoroutineScope()
-                val viewModel by viewModels<PrinterViewModel>()
+                val viewModel by viewModels<UploadViewModel>()
                 var isUploading by viewModel.isUploading
                 Box(
                     contentAlignment = Alignment.Center,
@@ -241,29 +266,29 @@ class PrinterActivity : ComponentActivity() {
                     }
                     if (isUploading) {
                         val uploadResponse by viewModel.uploadResponseLiveData.observeAsState()
-                        Log.d("PrinterActivity", "上传中")
+                        Log.d("UploadActivity", "上传中")
                         Loading(state = "上传中")
                         uploadResponse?.onSuccess { response ->
                             if (response.code == 0) {
                                 isUploading = false
-//                                viewModel.setFile(null)
-                                Log.d("PrinterActivity", "上传成功${response.result.szJobName}")
+                                Log.d("UploadActivity", "上传成功${response.result.szJobName}")
                                 scope.launch { scaffoldState.snackbarHostState.showSnackbar("上传成功") }
-                            } else if (response.message.isNotEmpty()) {
-                                Log.d("PrinterActivity", "upload failed")
-                                isUploading = false
-//                                viewModel.setFile(null)
-                                scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(response.message)
+                            } else {
+                                response.message.let { message ->
+                                    isUploading = false
+                                    Log.d("UploadActivity", "上传失败")
+                                    scope.launch {
+                                        scaffoldState.snackbarHostState.showSnackbar(message.ifBlank { "上传失败，请检查网络或文件" })
+                                    }
                                 }
                             }
                         }
                         uploadResponse?.onFailure {
-                            Log.d("PrinterActivity", "上传失败")
+                            Log.d("UploadActivity", "上传失败")
                             isUploading = false
 //                            viewModel.setFile(null)
                             scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(message = "上传失败",
+                                scaffoldState.snackbarHostState.showSnackbar(message = "上传失败，请检查网络或文件",
                                     duration = SnackbarDuration.Short)
                             }
                         }
@@ -375,7 +400,7 @@ fun UploadTopBar() {
 @Composable
 fun FileSelector(
     selectFile: () -> Unit,
-    viewModel: PrinterViewModel = viewModel(),
+    viewModel: UploadViewModel = viewModel(),
 ) {
     val file by viewModel.uploadFile
     Column(
@@ -427,7 +452,7 @@ fun UploadRadioOption(
     radioName: List<String>,
 //    uploadName: String,
     radioOptions: List<List<String>>,
-    viewModel: PrinterViewModel = viewModel(),
+    viewModel: UploadViewModel = viewModel(),
 ) {
 
     val (selectedOption, onOptionSelected) = rememberSaveable { mutableStateOf(radioOptions[0]) }
@@ -475,7 +500,7 @@ fun UploadRadioOption(
 
 @Composable
 fun Pages(
-    viewModel: PrinterViewModel = viewModel(),
+    viewModel: UploadViewModel = viewModel(),
 ) {
     @Composable
     fun Page(
@@ -589,7 +614,7 @@ fun Pages(
 
 @Composable
 fun Copies(
-    viewModel: PrinterViewModel = viewModel(),
+    viewModel: UploadViewModel = viewModel(),
 ) {
     var count by rememberSaveable { mutableStateOf("1") }
     Row(
@@ -647,7 +672,7 @@ fun Copies(
 
 @Composable
 fun UploadButton(
-    viewModel: PrinterViewModel = viewModel(),
+    viewModel: UploadViewModel = viewModel(),
 ) {
     Box(
         modifier = Modifier
@@ -724,7 +749,7 @@ fun DefaultPreview() {
         // A surface container using the 'background' color from the theme
         val scaffoldState = rememberScaffoldState()
         val scope = rememberCoroutineScope()
-        val viewModel: PrinterViewModel = viewModel()
+        val viewModel: UploadViewModel = viewModel()
         var isUploading by viewModel.isUploading
         Box(
             contentAlignment = Alignment.Center,

@@ -15,10 +15,10 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
-class PrinterViewModel : ViewModel() {
+class UploadViewModel : ViewModel() {
 
     val playState = mutableStateOf<PlayState?>(null)
-    var isParsing = MutableLiveData(false)
+    var isParsing = MutableLiveData(true)
     var isUploading = mutableStateOf(false)
     var uploadResultInfo = mutableStateOf("")
     var uploadSuccess = MutableLiveData(-1)
