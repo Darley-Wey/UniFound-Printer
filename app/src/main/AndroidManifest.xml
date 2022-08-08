@@ -29,7 +29,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+
         <activity
             android:name=".ui.printer.PrinterActivity"
             android:exported="true"
@@ -85,8 +85,15 @@
                 <data android:mimeType="application/xml" />
 
                 <!--图片 文本-->
-                <data android:mimeType="image/*" />
-                <data android:mimeType="text/*" />
+                <data android:mimeType="image/jpeg" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="image/vnd.mozilla.apng" />
+                <data android:mimeType="image/heic" />
+                <data android:mimeType="image/heic-sequence" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/html" />
+                <data android:mimeType="text/xml" />
+                <data android:mimeType="text/csv" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -138,8 +145,15 @@
                 <data android:mimeType="application/xml" />
 
                 <!--图片 文本-->
-                <data android:mimeType="image/*" />
-                <data android:mimeType="text/*" />
+                <data android:mimeType="image/jpeg" />
+                <data android:mimeType="image/png" />
+                <data android:mimeType="image/vnd.mozilla.apng" />
+                <data android:mimeType="image/heic" />
+                <data android:mimeType="image/heic-sequence" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="text/html" />
+                <data android:mimeType="text/xml" />
+                <data android:mimeType="text/csv" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
