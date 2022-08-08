@@ -1,8 +1,10 @@
 package com.darley.unifound.printer.ui.printer
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -32,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -53,10 +56,21 @@ import java.io.File
 // Compose Activity 使用 ComponentActivity 来实现
 class PrinterActivity : ComponentActivity() {
 
+    companion object {
+        fun actionStart(context: Context, data: String) {
+            val intent = Intent(context, PrinterActivity::class.java)
+            intent.putExtra("data", data)
+            context.startActivity(intent)
+        }
+    }
+
     private fun openDirectory() {
         val intent: Intent
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val viewModel by viewModels<PrinterViewModel>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !viewModel.hasDataPermission()) {
             // Choose a directory using the system's file picker.
+            val uri =
+                Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata")
             intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                 // Optionally, specify a URI for the directory that should be opened in
                 // the system file picker when it loads.
@@ -66,16 +80,21 @@ class PrinterActivity : ComponentActivity() {
                         or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
                 putExtra(
                     DocumentsContract.EXTRA_INITIAL_URI,
-                    DocumentFile.fromTreeUri(context, this.data!!)!!.uri
+                    DocumentFile.fromTreeUri(context, uri)?.uri
                 )
             }
+            startActivityForResult(intent, 0)
         } else {
             intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = "*/*"
+                // Optionally, specify a URI for the file that should appear in the
+                // system file picker when it loads.
+//                putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
             }
+            startActivityForResult(intent, 1)
         }
-        startActivityForResult(intent, 1)
+
     }
 
 
@@ -84,12 +103,25 @@ class PrinterActivity : ComponentActivity() {
         requestCode: Int, resultCode: Int, resultData: Intent?,
     ) {
         super.onActivityResult(requestCode, resultCode, resultData)
+        val viewModel by viewModels<PrinterViewModel>()
+        if (requestCode == 0
+            && resultCode == Activity.RESULT_OK
+        ) {
+            // The result data contains a URI for the document or directory that
+            // the user selected.
+            resultData?.also {
+                contentResolver.takePersistableUriPermission(
+                    it.data!!, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                // Perform operations on the document using its URI.
+            }
+            viewModel.saveDataPermission()
+        }
         if (requestCode == 1
             && resultCode == Activity.RESULT_OK
         ) {
             // The result data contains a URI for the document or directory that
             // the user selected.
-            val viewModel by viewModels<PrinterViewModel>()
             resultData?.also { intent ->
                 // Get the file path from the URI.
                 // intent.schema == "content"
@@ -99,12 +131,14 @@ class PrinterActivity : ComponentActivity() {
                 // Perform operations on the document using its URI.
             }
         }
+
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val action = intent.action!!
+//        Intent.Ac
+        /*val action = intent.action!!
         val type = intent.type!!
         Log.d("PrinterActivity", "action: $action, type: $type")
         val uri =
@@ -130,7 +164,7 @@ class PrinterActivity : ComponentActivity() {
         }
         val viewModel by viewModels<PrinterViewModel>()
         viewModel.setFile(file)
-        viewModel.setFileType(type)
+        viewModel.setFileType(type)*/
 
 
 //                println("filePath: $filePath")
@@ -153,80 +187,86 @@ class PrinterActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 val scaffoldState = rememberScaffoldState()
                 val scope = rememberCoroutineScope()
-                Scaffold(
-                    scaffoldState = scaffoldState,
-                    topBar = { UploadTopBar() },
-                )
+                val viewModel by viewModels<PrinterViewModel>()
+                var isUploading by viewModel.isUploading
+                Box(
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Scaffold(
+                        scaffoldState = scaffoldState,
+                        topBar = { UploadTopBar() },
+                    )
 //                    color = MaterialTheme.colors.background
-                { innerPadding ->
-                    val paperOptions =
-                        listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
-                    val duplexOptions =
-                        listOf(listOf("单面", "1"), listOf("双面长边", "2"), listOf("双面短边", "3"))
-                    val colorOptions = listOf(listOf("黑白", "1"), listOf("彩色", "2"))
-                    val paper = listOf("纸型", "paperId")
-                    val duplex = listOf("单双面", "duplex")
-                    val color = listOf("颜色", "color")
-                    BoxWithConstraints(
-                        modifier = Modifier
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        println("height $maxHeight")
-                        Column(
+                    { innerPadding ->
+                        val paperOptions =
+                            listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
+                        val duplexOptions =
+                            listOf(listOf("单面", "1"), listOf("双面长边", "2"), listOf("双面短边", "3"))
+                        val colorOptions = listOf(listOf("黑白", "1"), listOf("彩色", "2"))
+                        val paper = listOf("纸型", "paperId")
+                        val duplex = listOf("单双面", "duplex")
+                        val color = listOf("颜色", "color")
+//                    BoxWithConstraints(
+                        Box(
                             modifier = Modifier
-                                .width(350.dp)
-                                .padding(top = 16.dp),
-                            verticalArrangement = if (maxHeight > 800.dp) Arrangement.spacedBy(
-                                16.dp
-                            ) else Arrangement.spacedBy(
-                                0.dp
-                            ),
+                                .fillMaxSize()
+                                .padding(innerPadding),
+                            contentAlignment = Alignment.TopCenter,
                         ) {
-                            FileSelector({ openDirectory() })
-                            UploadRadioOption(paper, paperOptions)
-                            UploadDivider()
-                            UploadRadioOption(duplex, duplexOptions)
-                            UploadDivider()
-                            UploadRadioOption(color, colorOptions)
-                            UploadDivider()
-                            Pages()
-                            UploadDivider()
-                            Copies()
-                            UploadDivider()
-                            UploadButton()
-                        }
-//                        var response = uploadResponse?.getOrNull()
-                        if (viewModel.isUploading.value) {
-                            Log.d("PrinterActivity", "上传中")
-                            Loading(state = "上传中")
-                            val uploadResponse by viewModel.upload().observeAsState()
-                            uploadResponse?.onSuccess { response ->
-                                if (response.code == 0) {
-                                    viewModel.isUploading.value = false
-                                    viewModel.uploadResultInfo.value = "上传成功"
-                                    Log.d("PrinterActivity", "上传成功${response.result.szJobName}")
-                                    scope.launch { scaffoldState.snackbarHostState.showSnackbar("上传成功") }
-                                } else if (response.message.isNotEmpty()) {
-                                    Log.d("PrinterActivity", "upload failed")
-                                    viewModel.isUploading.value = false
-                                    viewModel.uploadResultInfo.value = response.message
-                                    scope.launch {
-                                        scaffoldState.snackbarHostState.showSnackbar(response.message)
-                                    }
-                                }
+//                        println("height $maxHeight")
+                            Column(
+                                modifier = Modifier
+                                    .width(350.dp)
+                                    .padding(top = 16.dp),
+                                /*  verticalArrangement = if (maxHeight > 800.dp) Arrangement.spacedBy(
+                                      16.dp
+                                  ) else Arrangement.spacedBy(
+                                      0.dp
+                                  ),*/
+                            ) {
+                                FileSelector({ openDirectory() })
+                                UploadRadioOption(paper, paperOptions)
+                                UploadDivider()
+                                UploadRadioOption(duplex, duplexOptions)
+                                UploadDivider()
+                                UploadRadioOption(color, colorOptions)
+                                UploadDivider()
+                                Pages()
+                                UploadDivider()
+                                Copies()
+                                UploadDivider()
+                                UploadButton()
                             }
-                            uploadResponse?.onFailure {
-                                Log.d("PrinterActivity", "上传失败")
-                                viewModel.isUploading.value = false
-                                viewModel.uploadResultInfo.value = "上传失败"
+                        }
+                    }
+                    if (isUploading) {
+                        val uploadResponse by viewModel.uploadResponseLiveData.observeAsState()
+                        Log.d("PrinterActivity", "上传中")
+                        Loading(state = "上传中")
+                        uploadResponse?.onSuccess { response ->
+                            if (response.code == 0) {
+                                isUploading = false
+//                                viewModel.setFile(null)
+                                Log.d("PrinterActivity", "上传成功${response.result.szJobName}")
+                                scope.launch { scaffoldState.snackbarHostState.showSnackbar("上传成功") }
+                            } else if (response.message.isNotEmpty()) {
+                                Log.d("PrinterActivity", "upload failed")
+                                isUploading = false
+//                                viewModel.setFile(null)
                                 scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar(message = "上传失败",
-                                        duration = SnackbarDuration.Short)
+                                    scaffoldState.snackbarHostState.showSnackbar(response.message)
                                 }
                             }
                         }
-
+                        uploadResponse?.onFailure {
+                            Log.d("PrinterActivity", "上传失败")
+                            isUploading = false
+//                            viewModel.setFile(null)
+                            scope.launch {
+                                scaffoldState.snackbarHostState.showSnackbar(message = "上传失败",
+                                    duration = SnackbarDuration.Short)
+                            }
+                        }
                     }
                 }
             }
@@ -293,12 +333,13 @@ fun Main() {
 @Composable
 fun UploadTopBar() {
     TopAppBar(
-        modifier = Modifier.height(56.dp),
+        modifier = Modifier.height(48.dp),
         backgroundColor = Color.White,
         navigationIcon = {
-            IconButton(onClick = {
-                // TODO: handle click
-            }) {
+            IconButton(
+                onClick = {
+                    // TODO: handle click
+                }) {
                 Icon(Icons.Sharp.ArrowBackIos, "")
             }
         },
@@ -311,10 +352,12 @@ fun UploadTopBar() {
         },
         actions = {
             IconButton(
+                modifier = Modifier.width(68.dp),
                 onClick = {
                     // TODO: handle click
                 },
             ) {
+                val context = LocalContext.current
                 val bitmap = BitmapFactory.decodeResource(
                     context.resources,
                     R.drawable.file
@@ -322,7 +365,7 @@ fun UploadTopBar() {
                 Image(
                     bitmap = bitmap.asImageBitmap(), "",
                     modifier = Modifier
-                        .size(width = 25.dp, height = 25.dp)
+                        .size(width = 24.dp, height = 24.dp)
                 )
             }
         },
@@ -334,15 +377,16 @@ fun FileSelector(
     selectFile: () -> Unit,
     viewModel: PrinterViewModel = viewModel(),
 ) {
-    val file = viewModel.uploadFile
+    val file by viewModel.uploadFile
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
         Box(
-            modifier = Modifier.size(350.dp, 180.dp),
+            modifier = Modifier.size(350.dp, 160.dp),
             contentAlignment = Alignment.Center,
         ) {
+            val context = LocalContext.current
             val bitmap =
                 BitmapFactory.decodeResource(context.resources, R.drawable.upload)
             Image(
@@ -356,10 +400,10 @@ fun FileSelector(
                 ),
             )
             {
-                Text(text = if (file.value == null) "选择文件" else "重新选择")
+                Text(text = if (file == null) "选择文件" else "重新选择")
             }
             Text(
-                text = file.value?.name ?: "",
+                text = file?.name ?: "",
                 fontSize = 14.sp,
                 color = Color.White,
                 textAlign = TextAlign.Center,
@@ -435,10 +479,6 @@ fun Pages(
 ) {
     @Composable
     fun Page(
-        /*from: String,
-        to: String,
-        onFromChange: (String) -> Unit,
-        onToChange: (String) -> Unit*/
     ) {
         var from by rememberSaveable { mutableStateOf("1") }
         var to by rememberSaveable { mutableStateOf("1") }
@@ -457,11 +497,11 @@ fun Pages(
                     value = from,
                     singleLine = true,
                     onValueChange =
-//                    onFromChange,
                     {
-                        from = it
-//                        onFromChanged(it)
-                        viewModel.setUploadInfo("from", it)
+                        from =
+                            if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else "1"
+                        // it为空时设置为1，否则设置为输入的数字，若输入的不是数字，则设置为1
+                        viewModel.setUploadInfo("from", it.ifBlank { "1" })
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
@@ -471,7 +511,6 @@ fun Pages(
             }
             Text(
                 text = " ~",
-                style = MaterialTheme.typography.body1.merge(),
             )
             Box(
                 contentAlignment = Alignment.CenterStart,
@@ -484,12 +523,11 @@ fun Pages(
                     value = to,
                     singleLine = true,
                     onValueChange = {
-                        to = it
-//                        onToChange(it)
-                        viewModel.setUploadInfo("to", it)
+                        to =
+                            if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else from
+                        viewModel.setUploadInfo("to", it.ifBlank { from })
                     },
                     modifier = Modifier.padding(start = 6.dp),
-
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
                     ),
@@ -497,7 +535,6 @@ fun Pages(
             }
             Text(
                 text = "页",
-                style = MaterialTheme.typography.body1.merge(),
                 modifier = Modifier.padding(start = 6.dp),
                 fontSize = 14.sp
             )
@@ -506,15 +543,11 @@ fun Pages(
 
     val radioOptions = listOf("全部", "部分")
     val (selectedOption, onOptionSelected) = rememberSaveable { mutableStateOf(radioOptions[0]) }
-//    var from by remember { mutableStateOf("1") }
-//    var to by remember { mutableStateOf("1") }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .selectableGroup()
             .height(50.dp),
-//        horizontalArrangement = Arrangement.Start
     ) {
         Text(
             "页数：",
@@ -545,11 +578,7 @@ fun Pages(
             }
         }
         if (selectedOption == "部分") {
-//            viewModel.setUploadInfo("pages", "0")
-//            Page(from, to, { from = it }, { to = it })
             Page()
-//            viewModel.setUploadInfo("from", from)
-//            viewModel.setUploadInfo("from", to)
         } else {
             viewModel.setUploadInfo("from", "0")
             viewModel.setUploadInfo("to", "0")
@@ -574,13 +603,12 @@ fun Copies(
                 .padding(start = 16.dp),
         )
         OutlinedButton(
-//            onClick = { if (count > 1) count-- else count = 1 }
             onClick = {
-                count = if (count.toInt() > 1) (count.toInt() - 1).toString() else "1"
+                count =
+                    if (count.isBlank() || (count.toInt() == 1)) "1" else (count.toInt() - 1).toString()
                 viewModel.setUploadInfo("copies", count)
             },
             // count最小为1
-//            enabled = count > 1,
             // 调整按钮的大小
             modifier = Modifier.size(25.dp, 25.dp),
             contentPadding = PaddingValues(0.dp)
@@ -591,7 +619,6 @@ fun Copies(
         }
         BasicTextField(
             value = count,
-//            cursor = Brush.
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
@@ -599,26 +626,20 @@ fun Copies(
             onValueChange = {
                 count =
                     if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else "1"
-                viewModel.setUploadInfo("copies", count)
+                viewModel.setUploadInfo("copies", count.ifBlank { "1" })
             },   // 只能输入数字)},
             modifier = Modifier
                 .width((20 + (count.length * 10)).dp)
-//                .size(35.dp, 25.dp)
                 .padding(start = 10.dp, top = 2.dp),
         )
         OutlinedButton(
             onClick = {
-                count = (count.toInt() + 1).toString()
+                count = if (count.isBlank()) "1" else (count.toInt() + 1).toString()
                 viewModel.setUploadInfo("copies", count)
             },
             modifier = Modifier.size(25.dp, 25.dp),
             contentPadding = PaddingValues(0.dp)
         ) {
-            /*Icon(
-                Icons.Filled.Favorite,
-                contentDescription = null,
-            )*/
-//            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             Text("+")
         }
     }
@@ -628,41 +649,29 @@ fun Copies(
 fun UploadButton(
     viewModel: PrinterViewModel = viewModel(),
 ) {
-    val (isLoading, onClick) = remember { mutableStateOf(false) }
-    var clicked by remember { mutableStateOf(false) }
-
-    /* val animatedProgress by animateFloatAsState(
-         targetValue = if (uploadResponse?.isSuccess == true) 1f else 0f,
-         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
-     )*/
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
+            .height(100.dp),
         contentAlignment = Alignment.Center,
     ) {
         OutlinedButton(
             modifier = Modifier
                 .size(80.dp, 40.dp),
-            contentPadding = PaddingValues(0.dp),
+//            contentPadding = PaddingValues(0.dp),
             onClick = {
-                clicked = true
-                Log.d("PrinterActivity", "before isUploading: ${viewModel.isUploading.value}")
                 viewModel.isUploading.value = true
-                Log.d("PrinterActivity", "after isUploading: ${viewModel.isUploading.value}")
-//                viewModel.upload(
-                viewModel.setUploadData(
-                    viewModel.uploadFile.value,
-                    viewModel.fileType,
-                    viewModel.uploadInfo.value
-                )
-//                )
+                viewModel.setUploadData()
+                viewModel.upload()
+                viewModel.setFile(null)
             },
+            enabled = viewModel.uploadFile.value != null,
         ) {
             Text("上传")
         }
     }
 }
+
 
 @Composable
 fun UploadDivider() {
@@ -676,7 +685,6 @@ fun UploadDivider() {
 @Composable()
 fun Loading(state: String) {
     Box(
-        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(
@@ -709,80 +717,56 @@ fun Loading(state: String) {
 }
 
 
-@Composable
-fun MyCanvas() {
-//    import androidx.compose.foundation.Canvas
-//            import androidx.compose.foundation.layout.size
-//            import androidx.compose.ui.graphics.drawscope.inset
-//            import androidx.compose.ui.graphics.drawscope.rotate
-
-// Sample showing how to use the DrawScope receiver scope to issue
-// drawing commands
-    Canvas(Modifier.size(120.dp)) {
-        drawRect(color = Color.Gray) // Draw grey background
-        // Inset content by 10 pixels on the left/right sides and 12 by the
-        // top/bottom
-        inset(10.0f, 12.0f) {
-            val quadrantSize = size / 2.0f
-
-            // Draw a rectangle within the inset bounds
-            drawRect(
-                size = quadrantSize,
-                color = Color.Red
-            )
-
-//            rotate(45.0f) {
-//                drawRect(size = quadrantSize, color = Color.Blue)
-//            }
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     PrinterTheme {
         // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.background
-        )
-        {
-            val paperOptions =
-                listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
-            val duplexOptions =
-                listOf(listOf("单面", "1"), listOf("双面长边", "2"), listOf("双面短边", "3"))
-            val colorOptions = listOf(listOf("黑白", "1"), listOf("彩色", "2"))
-            val paper = "纸型"
-            val duplex = "单双面"
-            val color = "颜色"
-//            val uploadData =
-//                viewModel.makeUploadData(file, type, viewModel.uploadInfo.value)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                val viewModel: PrinterViewModel = viewModel()
-                UploadTopBar()
-                BoxWithConstraints {
-                    println("height $maxHeight")
+        val scaffoldState = rememberScaffoldState()
+        val scope = rememberCoroutineScope()
+        val viewModel: PrinterViewModel = viewModel()
+        var isUploading by viewModel.isUploading
+        Box(
+            contentAlignment = Alignment.Center,
+        ) {
+            Scaffold(
+                scaffoldState = scaffoldState,
+                topBar = { UploadTopBar() },
+            )
+//                    color = MaterialTheme.colors.background
+            { innerPadding ->
+                val paperOptions =
+                    listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
+                val duplexOptions =
+                    listOf(listOf("单面", "1"), listOf("双面长边", "2"), listOf("双面短边", "3"))
+                val colorOptions = listOf(listOf("黑白", "1"), listOf("彩色", "2"))
+                val paper = listOf("纸型", "paperId")
+                val duplex = listOf("单双面", "duplex")
+                val color = listOf("颜色", "color")
+//                    BoxWithConstraints(
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+//                        println("height $maxHeight")
                     Column(
                         modifier = Modifier
                             .width(350.dp)
                             .padding(top = 16.dp),
-                        verticalArrangement = if (maxHeight > 800.dp) Arrangement.spacedBy(
-                            16.dp
-                        ) else Arrangement.spacedBy(
-                            0.dp
-                        ),
+                        /*  verticalArrangement = if (maxHeight > 800.dp) Arrangement.spacedBy(
+                              16.dp
+                          ) else Arrangement.spacedBy(
+                              0.dp
+                          ),*/
                     ) {
-//                        fileSelector({ openDirectory() })
-//                        UploadRadioOption(paper, "paper", paperOptions)
-//                        uploadDivider()
-//                        UploadRadioOption(duplex, "duplex", duplexOptions)
-//                        uploadDivider()
-//                        UploadRadioOption(color, "color", colorOptions)
+                        FileSelector({ })
+                        UploadRadioOption(paper, paperOptions)
+                        UploadDivider()
+                        UploadRadioOption(duplex, duplexOptions)
+                        UploadDivider()
+                        UploadRadioOption(color, colorOptions)
                         UploadDivider()
                         Pages()
                         UploadDivider()
@@ -792,6 +776,35 @@ fun DefaultPreview() {
                     }
                 }
             }
+            /*if (isUploading) {
+                val uploadResponse by viewModel.uploadResponseLiveData.observeAsState()
+                Log.d("PrinterActivity", "上传中")
+                Loading(state = "上传中")
+                uploadResponse?.onSuccess { response ->
+                    if (response.code == 0) {
+                        isUploading = false
+//                                viewModel.setFile(null)
+                        Log.d("PrinterActivity", "上传成功${response.result.szJobName}")
+                        scope.launch { scaffoldState.snackbarHostState.showSnackbar("上传成功") }
+                    } else if (response.message.isNotEmpty()) {
+                        Log.d("PrinterActivity", "upload failed")
+                        isUploading = false
+//                                viewModel.setFile(null)
+                        scope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(response.message)
+                        }
+                    }
+                }
+                uploadResponse?.onFailure {
+                    Log.d("PrinterActivity", "上传失败")
+                    isUploading = false
+//                            viewModel.setFile(null)
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar(message = "上传失败",
+                            duration = SnackbarDuration.Short)
+                    }
+                }
+            }*/
         }
     }
 }

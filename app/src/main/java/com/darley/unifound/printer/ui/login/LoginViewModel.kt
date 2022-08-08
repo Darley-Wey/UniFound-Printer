@@ -20,14 +20,13 @@ class LoginViewModel : ViewModel() {
     val loginResult: LiveData<LoginResult> = _loginResult
     private val loginInfoLiveData = MutableLiveData<LoginInfo>()
 
-    fun saveUser(user: LoggedInUser) = Repository.saveUser(user)
     fun getSavedUser() = Repository.getSavedUser()
     fun isUserSaved() = Repository.isUserSaved()
+    fun hasLoginInfo() = Repository.hasLoginInfo()
 
-    //    private val loginResult = MutableLiveData<LoginResponse>()
+    // 在开始观察后，loginInfoLiveData 每发生变化就会发送网络请求。
     val loginLiveData = Transformations.switchMap(loginInfoLiveData) {
         Repository.login(it.username, it.password)
-//        loginRepository.login(it.username, it.password)
     }
 
     // value变化时触发对应的事件
@@ -39,11 +38,13 @@ class LoginViewModel : ViewModel() {
         // can be launched in a separate asynchronous job
         val code = loginResponse.code
         val result = loginResponse.result
+        val message = loginResponse.message
         if (code == 0) {
             _loginResult.value =
-                LoginResult(success = LoggedInUserView(displayName = result.szTrueName))
+                LoginResult(success = LoggedInUser(userId = result.szLogonName,
+                    displayName = result.szTrueName))
         } else {
-            _loginResult.value = LoginResult(error = "登陆失败")
+            _loginResult.value = LoginResult(error = message)
         }
     }
 

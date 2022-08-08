@@ -20,6 +20,7 @@ object FileUtil {
 
     @SuppressLint("Range")
     fun getFile(uri: Uri): File? {
+        // schema == "content"
         // The query, because it only applies to a single document, returns only
         // one row. There's no need to filter, sort, or select fields,
         // because we want all fields for one document.
@@ -61,6 +62,7 @@ object FileUtil {
         }
         return null
     }
+
 
     @Throws(IOException::class)
     private fun getBitmapFromUri(uri: Uri): Bitmap {

@@ -2,6 +2,7 @@ package com.darley.unifound.printer.data
 
 import android.util.Log
 import androidx.lifecycle.liveData
+import com.darley.unifound.printer.data.dao.DataPermissionDao
 import com.darley.unifound.printer.data.dao.LoginInfoDao
 import com.darley.unifound.printer.data.dao.UserDao
 import com.darley.unifound.printer.data.model.LoggedInUser
@@ -15,11 +16,13 @@ import kotlin.coroutines.CoroutineContext
 
 object Repository {
     fun isUserSaved() = UserDao.isUserSaved()
-    fun saveUser(user: LoggedInUser) = UserDao.saveUser(user)
+    private fun saveUser(user: LoggedInUser) = UserDao.saveUser(user)
     fun getSavedUser() = UserDao.getSavedUser()
     fun hasLoginInfo() = LoginInfoDao.hasLoginInfo()
     fun saveLoginInfo(loginInfo: LoginInfo) = LoginInfoDao.saveLoginInfo(loginInfo)
     fun getLoginInfo() = LoginInfoDao.getLoginInfo()
+    fun saveDataPermission() = DataPermissionDao.saveDataPermission()
+    fun hasDataPermission() = DataPermissionDao.hasDataPermission()
 
     fun logout() {
         LoginInfoDao.rmLoginInfo()
@@ -35,6 +38,7 @@ object Repository {
         )
         val loginResponse = PrinterNetwork.login(loginData)
         if (loginResponse.code == 0) {
+            // 成功登录，保存登录信息
             saveUser(
                 LoggedInUser(
                     loginResponse.result.szLogonName,
@@ -44,10 +48,12 @@ object Repository {
             saveLoginInfo(
                 LoginInfo(username, password)
             )
-            Result.success(loginResponse)
-        } else {
-            Result.failure(RuntimeException("response code is ${loginResponse.code}"))
+//            Result.success(loginResponse)
         }
+//        else {
+        Result.success(loginResponse)
+//            Result.failure(RuntimeException("response code is ${loginResponse.code}"))
+//        }
     }
 
     fun upload(
@@ -58,9 +64,10 @@ object Repository {
         dwFrom: RequestBody,
         dwCopies: RequestBody,
         BackURL: RequestBody,
-        dwTo: RequestBody
+        dwTo: RequestBody,
     ) = fire(Dispatchers.IO) {
         val authTokenResponse = PrinterNetwork.getAuthToken()
+        // 上传时先自动执行一遍登录刷新 cookies， 用户名和密码从存储的账号密码中获取
         val loginInfo = getLoginInfo()!!
         val loginData = LoginData(
             loginInfo.username,

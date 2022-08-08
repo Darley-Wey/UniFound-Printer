@@ -7,60 +7,71 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
 
     <application
         android:name=".APP"
-        android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Printer"
         tools:targetApi="31">
         <activity
-            android:name=".ui.printer.PrinterActivity"
+            android:name=".ui.printer.ReceiverActivity"
             android:exported="true"
-            android:label="@string/title_activity_printer"
+            android:label="@string/title_activity_receiver"
             android:theme="@style/Theme.Printer">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <!--                <data android:host="*" />-->
+                <!-- <data android:host="*" /> -->
                 <data
                     android:mimeType="*/*"
                     android:scheme="file" />
-                <!--                <data android:pathSuffix="jpg" />-->
-                <!--                <data android:pathSuffix="png" />-->
-                <!--                <data android:pathSuffix="doc" />-->
-                <!--                <data android:pathSuffix="docx" />-->
-                <!--                <data android:pathSuffix="xls" />-->
-                <!--                <data android:pathSuffix="xlsx" />-->
-                <!--                <data android:pathSuffix="txt" />-->
+                <!-- <data android:pathSuffix="jpg" /> -->
+                <!-- <data android:pathSuffix="png" /> -->
+                <!-- <data android:pathSuffix="doc" /> -->
+                <!-- <data android:pathSuffix="docx" /> -->
+                <!-- <data android:pathSuffix="xls" /> -->
+                <!-- <data android:pathSuffix="xlsx" /> -->
+                <!-- <data android:pathSuffix="txt" /> -->
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <data
                     android:mimeType="*/*"
                     android:scheme="content" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
                 <data android:mimeType="*/*" />
+
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.printer.PrinterActivity"
+            android:exported="false"
+            android:label="@string/title_activity_printer"
+            android:theme="@style/Theme.Printer">
+
         </activity>
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

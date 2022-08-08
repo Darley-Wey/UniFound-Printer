@@ -3,11 +3,9 @@ package com.darley.unifound.printer.ui.printer
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.darley.unifound.printer.data.PlayState
 import com.darley.unifound.printer.data.Repository
-import com.darley.unifound.printer.data.dao.LoginInfoDao
 import com.darley.unifound.printer.data.model.LoginInfo
 import com.darley.unifound.printer.data.model.UploadInfo
 import com.darley.unifound.printer.data.network.UploadData
@@ -20,41 +18,29 @@ import java.io.File
 class PrinterViewModel : ViewModel() {
 
     val playState = mutableStateOf<PlayState?>(null)
+    var isParsing = MutableLiveData(false)
     var isUploading = mutableStateOf(false)
     var uploadResultInfo = mutableStateOf("")
     var uploadSuccess = MutableLiveData(-1)
-    val uploadInfo = mutableStateOf(UploadInfo())
+    private val uploadInfo = mutableStateOf(UploadInfo())
 
     var uploadFile = mutableStateOf<File?>(null)
-    private var _fileType: String? = null
-    val fileType: String?
-        get() = _fileType
+    private var _uploadFileType: String? = null
 
     fun hasLoginInfo() = Repository.hasLoginInfo()
     fun saveLoginInfo(loginInfo: LoginInfo) = Repository.saveLoginInfo(loginInfo)
     fun getLoginInfo() = Repository.getLoginInfo()
+    fun saveDataPermission() = Repository.saveDataPermission()
+    fun hasDataPermission() = Repository.hasDataPermission()
 
 
     private val _uploadLiveData = MutableLiveData<UploadData>()
-    /*val uploadLiveData: LiveData<UploadData>
-        get() = _uploadLiveData*/
+    private var _uploadResponseLiveData = MutableLiveData<Result<UploadResponse>>()
+    val uploadResponseLiveData: LiveData<Result<UploadResponse>>
+        get() = _uploadResponseLiveData
 
-    /* var uploadResponseLiveData = Transformations.switchMap(_uploadLiveData) {
-         Repository.upload(
-             it.file,
-             it.dwPaperId,
-             it.dwDuplex,
-             it.dwColor,
-             it.dwFrom,
-             it.dwCopies,
-             it.BackURL,
-             it.dwTo
-         )
-     }*/
-
-    fun upload(): LiveData<Result<UploadResponse>> {
-//        _uploadLiveData.value = data
-        return _uploadLiveData.value!!.let {
+    fun upload() {
+        _uploadResponseLiveData = _uploadLiveData.value!!.let {
             Repository.upload(
                 it.file,
                 it.dwPaperId,
@@ -65,7 +51,7 @@ class PrinterViewModel : ViewModel() {
                 it.BackURL,
                 it.dwTo
             )
-        }
+        } as MutableLiveData<Result<UploadResponse>>
     }
 
     fun setUploadInfo(name: String, value: String) {
@@ -77,10 +63,10 @@ class PrinterViewModel : ViewModel() {
     }
 
     fun setFileType(type: String?) {
-        _fileType = type
+        _uploadFileType = type
     }
 
-    fun setUploadData(file: File?, type: String?, uploadInfo: UploadInfo) {
+    fun setUploadData() {
         /*val requestBodyMap: Map<String, RequestBody> = mapOf(
             "dwPaperId" to dwPaperId,
             "dwDuplex" to dwDuplex,
@@ -90,19 +76,20 @@ class PrinterViewModel : ViewModel() {
             "BackURL" to backURL,
             "dwTo" to dwTo
         )*/
+
         _uploadLiveData.value = UploadData(
             file = MultipartBody.Part.createFormData(
                 "szPath",
-                file!!.name,
-                RequestBody.create(MediaType.parse(type ?: ""), file)
+                uploadFile.value!!.name,
+                RequestBody.create(MediaType.parse(_uploadFileType ?: ""), uploadFile.value!!)
             ),
-            dwPaperId = RequestBody.create(null, uploadInfo.paperId),
-            dwDuplex = RequestBody.create(null, uploadInfo.duplex),
-            dwColor = RequestBody.create(null, uploadInfo.color),
-            dwFrom = RequestBody.create(null, uploadInfo.from),
-            dwCopies = RequestBody.create(null, uploadInfo.copies),
-            BackURL = RequestBody.create(null, uploadInfo.backUrl),
-            dwTo = RequestBody.create(null, uploadInfo.to)
+            dwPaperId = RequestBody.create(null, uploadInfo.value.paperId),
+            dwDuplex = RequestBody.create(null, uploadInfo.value.duplex),
+            dwColor = RequestBody.create(null, uploadInfo.value.color),
+            dwFrom = RequestBody.create(null, uploadInfo.value.from),
+            dwCopies = RequestBody.create(null, uploadInfo.value.copies),
+            BackURL = RequestBody.create(null, uploadInfo.value.backUrl),
+            dwTo = RequestBody.create(null, uploadInfo.value.to)
         )
     }
 }

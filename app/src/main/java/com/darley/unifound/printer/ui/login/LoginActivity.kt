@@ -4,34 +4,61 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat.requestPermissions
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.darley.unifound.printer.APP
 import com.darley.unifound.printer.R
-import com.darley.unifound.printer.data.model.LoginInfo
+import com.darley.unifound.printer.data.model.LoggedInUser
 import com.darley.unifound.printer.databinding.ActivityLoginBinding
+import com.darley.unifound.printer.ui.printer.PrinterActivity
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
 
-    //    开启存储权限
+
+    /*@Deprecated("Deprecated in Java")
+    override fun onActivityResult(
+        requestCode: Int, resultCode: Int, resultData: Intent?,
+    ) {
+        super.onActivityResult(requestCode, resultCode, resultData)
+        if (requestCode == 0
+            && resultCode == Activity.RESULT_OK
+        ) {
+            // The result data contains a URI for the document or directory that
+            // the user selected.
+            resultData?.also {
+                contentResolver.takePersistableUriPermission(
+                    it.data!!, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                // Perform operations on the document using its URI.
+            }
+        }
+    }*/
+
+
+    //  开启存储权限
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
@@ -45,10 +72,11 @@ class LoginActivity : AppCompatActivity() {
                         finish()
                     }
                 } else {
-                    Toast.makeText(this, "权限获取成功", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "存储权限获取成功", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+
     }
 
     private fun showDialogTipUserGoToAppSetting() {
@@ -65,7 +93,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        检查存储权限
+//      检查存储权限
         if (ContextCompat.checkSelfPermission(
                 this,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE
@@ -73,11 +101,18 @@ class LoginActivity : AppCompatActivity() {
         ) {
             requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), 0)
         }
+
         /*val webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.webViewClient = WebViewClient()
         webView.loadUrl("http://10.135.0.139:9130/client/new/cprintMobile/login.html")
         setContentView(webView)*/
+
+        loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
+        if (loginViewModel.hasLoginInfo() && loginViewModel.isUserSaved()) {
+            updateUiWithUser(loginViewModel.getSavedUser()!!)
+        }
+
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -89,13 +124,13 @@ class LoginActivity : AppCompatActivity() {
 
         //        loginViewModel =
         //            ViewModelProvider(this, LoginViewModelFactory())[LoginViewModel::class.java]
-        loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
+
+
+        // 监听输入框的变化，实时错误检查
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
-
             // disable login button unless both username / password is valid
             login.isEnabled = loginState.isDataValid
-
             if (loginState.usernameError != null) {
                 username.error = getString(loginState.usernameError)
             }
@@ -104,9 +139,9 @@ class LoginActivity : AppCompatActivity() {
             }
         })
 
+        // 实时监听登录结果变化
         loginViewModel.loginResult.observe(this@LoginActivity, Observer {
             val loginResult = it ?: return@Observer
-
             loading.visibility = View.GONE
             if (loginResult.error != null) {
                 showLoginFailed(loginResult.error)
@@ -115,10 +150,21 @@ class LoginActivity : AppCompatActivity() {
                 updateUiWithUser(loginResult.success)
             }
             setResult(Activity.RESULT_OK)
-
             //Complete and destroy login activity once successful
-            finish()
+//            finish()
         })
+
+        // 监听登录网络请求
+        loginViewModel.loginLiveData.observe(this@LoginActivity) {
+            if (it.isSuccess) {
+                it.getOrNull()
+                    ?.let { it1 -> loginViewModel.loginResult(it1) }
+//                        ?.let { it2 -> updateUiWithUser(it2) }
+            } else {
+                loading.visibility = View.GONE
+                showLoginFailed("登陆失败，请检查输入或网络连接")
+            }
+        }
 
         username.afterTextChanged {
             loginViewModel.loginDataChanged(
@@ -137,37 +183,25 @@ class LoginActivity : AppCompatActivity() {
 
             setOnEditorActionListener { _, actionId, _ ->
                 when (actionId) {
-                    EditorInfo.IME_ACTION_DONE ->
+                    EditorInfo.IME_ACTION_DONE -> {
+                        loading.visibility = View.VISIBLE
                         loginViewModel.login(
                             username.text.toString(),
                             password.text.toString()
                         )
+                    }
                 }
                 false
             }
+        }
 
-            login.setOnClickListener {
-                val loginInfo = LoginInfo(username.text.toString(), password.text.toString())
-                loading.visibility = View.VISIBLE
-                loginViewModel.login(username.text.toString(), password.text.toString())
-                loginViewModel.loginLiveData.observe(this@LoginActivity) {
-                    if (it.isSuccess) {
-                        loginViewModel.loginResult(it.getOrNull()!!)
-                        loading.visibility = View.GONE
-                        //                        loginViewModel.saveUser(loginInfo)
-                        it.getOrNull()
-                            ?.let { it1 -> LoggedInUserView(it1.result.szTrueName) }
-                            ?.let { it2 -> updateUiWithUser(it2) }
-                    } else {
-                        loading.visibility = View.GONE
-                        showLoginFailed("登陆失败，请检查输入或网络连接")
-                    }
-                }
-            }
+        login.setOnClickListener {
+            loading.visibility = View.VISIBLE
+            loginViewModel.login(username.text.toString(), password.text.toString())
         }
     }
 
-    private fun updateUiWithUser(model: LoggedInUserView) {
+    private fun updateUiWithUser(model: LoggedInUser) {
         val welcome = getString(R.string.welcome)
         val displayName = model.displayName
         // TODO : initiate successful logged in experience
@@ -176,6 +210,8 @@ class LoginActivity : AppCompatActivity() {
             "$welcome $displayName",
             Toast.LENGTH_LONG
         ).show()
+        PrinterActivity.actionStart(this, "login")
+        finish()
     }
 
     private fun showLoginFailed(errorString: String) {

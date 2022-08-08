@@ -22,7 +22,8 @@ data class AuthTokenResponse(
 
 data class LoginResponse(
     val code: Int,
-    val result: Result
+    val message: String,
+    val result: Result,
 ) {
     data class Result(
         val szLogonName: String,
