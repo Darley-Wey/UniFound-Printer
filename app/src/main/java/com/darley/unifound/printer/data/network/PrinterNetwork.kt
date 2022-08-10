@@ -9,7 +9,6 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object PrinterNetwork {
-    //    private val authTokenService = ServiceCreator.create(AuthTokenService::class.java)
     private val loginService = ServiceCreator.create<LoginService>()
     private val uploadService = ServiceCreator.create<UploadService>()
 

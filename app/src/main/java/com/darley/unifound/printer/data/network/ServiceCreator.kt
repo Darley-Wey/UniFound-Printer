@@ -3,6 +3,7 @@ package com.darley.unifound.printer.data.network
 import okhttp3.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class UnifoundCookie : CookieJar {
     private val cookieStore = HashMap<String, List<Cookie>>()
@@ -23,8 +24,10 @@ class UnifoundCookie : CookieJar {
 
 //object 单例类
 object ServiceCreator {
-    // 创建一个okHttpClient对象，用于管理cookie
-    private val client = OkHttpClient.Builder().cookieJar(UnifoundCookie()).build()
+    // 创建一个okHttpClient对象，用于管理cookie和timeout
+    private val client =
+        OkHttpClient.Builder().cookieJar(UnifoundCookie()).writeTimeout(0, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.SECONDS).build()
 
     private const val BASE_URL = "http://10.135.0.139:9130/"
 

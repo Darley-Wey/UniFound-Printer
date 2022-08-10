@@ -1,18 +1,16 @@
 package com.darley.unifound.printer.data.network
 
-import com.darley.unifound.printer.data.model.UploadInfo
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
-import java.io.File
 
 data class UploadResponse(
     val code: Int,
     val message: String,
-    val result: Result
+    val result: Result?,
 ) {
     data class Result(
         val szJobName: String,
@@ -27,8 +25,9 @@ data class UploadData(
     val dwFrom: RequestBody,
     val dwCopies: RequestBody,
     val BackURL: RequestBody,
-    val dwTo: RequestBody
+    val dwTo: RequestBody,
 )
+
 
 interface UploadService {
     @Multipart
