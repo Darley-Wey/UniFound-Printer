@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.darley.unifound.printer.R
@@ -27,9 +28,53 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
 
+    //  开启存储权限
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            0 -> {
+                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "请手动开启存储权限，否则部分文件无法上传", Toast.LENGTH_LONG).show()
+                    val b = shouldShowRequestPermissionRationale(permissions[0])
+                    if (!b) {
+                        showDialogTipUserGoToAppSetting()
+                    } else {
+                        finish()
+                    }
+                } else {
+                    Toast.makeText(this, "存储权限获取成功", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showDialogTipUserGoToAppSetting() {
+        val dialog = android.app.AlertDialog.Builder(this)
+        dialog.setTitle("存储权限未开启")
+        dialog.setMessage("请在-应用设置-权限-中，允许使用存储权限来保存您的数据")
+        dialog.setPositiveButton("立即开启") { _, _ ->
+            val intent =
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 检查存储权限
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
+        }
 
         // TODO webView
         /*val webView = WebView(this)
