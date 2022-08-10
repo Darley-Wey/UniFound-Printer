@@ -4,9 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.darley.unifound.printer.data.PlayState
 import com.darley.unifound.printer.data.Repository
-import com.darley.unifound.printer.data.model.LoginInfo
 import com.darley.unifound.printer.data.model.UploadInfo
 import com.darley.unifound.printer.data.network.UploadData
 import com.darley.unifound.printer.data.network.UploadResponse
@@ -17,21 +15,14 @@ import java.io.File
 
 class UploadViewModel : ViewModel() {
 
-    val playState = mutableStateOf<PlayState?>(null)
     var isParsing = MutableLiveData(true)
     var isUploading = mutableStateOf(false)
-    var uploadResultInfo = mutableStateOf("")
-    var uploadSuccess = MutableLiveData(-1)
+    var uploadFile = mutableStateOf<File?>(null)
+    private var uploadFileType: String? = null
     private val uploadInfo = mutableStateOf(UploadInfo())
 
-    var uploadFile = mutableStateOf<File?>(null)
-    private var _uploadFileType: String? = null
 
     fun hasLoginInfo() = Repository.hasLoginInfo()
-    fun saveLoginInfo(loginInfo: LoginInfo) = Repository.saveLoginInfo(loginInfo)
-    fun getLoginInfo() = Repository.getLoginInfo()
-    fun saveDataPermission() = Repository.saveDataPermission()
-    fun hasDataPermission() = Repository.hasDataPermission()
 
 
     private val _uploadLiveData = MutableLiveData<UploadData>()
@@ -63,7 +54,7 @@ class UploadViewModel : ViewModel() {
     }
 
     fun setFileType(type: String?) {
-        _uploadFileType = type
+        uploadFileType = type
     }
 
     fun setUploadData() {
@@ -81,7 +72,7 @@ class UploadViewModel : ViewModel() {
             file = MultipartBody.Part.createFormData(
                 "szPath",
                 uploadFile.value!!.name,
-                RequestBody.create(MediaType.parse(_uploadFileType ?: ""), uploadFile.value!!)
+                RequestBody.create(MediaType.parse(uploadFileType ?: ""), uploadFile.value!!)
             ),
             dwPaperId = RequestBody.create(null, uploadInfo.value.paperId),
             dwDuplex = RequestBody.create(null, uploadInfo.value.duplex),

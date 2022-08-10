@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun UploadDivider() {
     Divider(
-        color = Color.Gray,
+        color = Color.LightGray,
         thickness = (0.5).dp,
         modifier = Modifier.padding(start = 6.dp, end = 6.dp)
     )
