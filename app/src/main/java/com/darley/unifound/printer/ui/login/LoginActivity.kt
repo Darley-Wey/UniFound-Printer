@@ -39,8 +39,9 @@ class LoginActivity : AppCompatActivity() {
         setContentView(webView)*/
 
         loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
-        if (loginViewModel.hasLoginInfo() && loginViewModel.isUserSaved()) {
-            updateUiWithUser(loginViewModel.getSavedUser()!!)
+        if (loginViewModel.hasLoginInfo()) {
+            UploadActivity.actionStart(this, "login")
+            finish()
         }
 
         binding = ActivityLoginBinding.inflate(layoutInflater)

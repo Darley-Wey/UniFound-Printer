@@ -20,8 +20,7 @@ class LoginViewModel : ViewModel() {
     val loginResult: LiveData<LoginResult> = _loginResult
     private val loginInfoLiveData = MutableLiveData<LoginInfo>()
 
-    fun getSavedUser() = Repository.getSavedUser()
-    fun isUserSaved() = Repository.isUserSaved()
+
     fun hasLoginInfo() = Repository.hasLoginInfo()
 
     // 在开始观察后，loginInfoLiveData 每发生变化就会发送网络请求。
@@ -41,7 +40,7 @@ class LoginViewModel : ViewModel() {
         val message = loginResponse.message
         if (code == 0) {
             _loginResult.value =
-                LoginResult(success = LoggedInUser(userId = result.szLogonName,
+                LoginResult(success = LoggedInUser(userId = result!!.szLogonName,
                     displayName = result.szTrueName))
         } else {
             _loginResult.value = LoginResult(error = message)
