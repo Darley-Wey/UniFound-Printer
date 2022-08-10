@@ -23,7 +23,7 @@
 - 对 intent 的进行解析，对于 scheme 为 file 的 intent 直接使用 intent.file 文件，对于
   scheme 为 content 的 intent 将 intent 转为文件存至本软件的文件夹中，然后调用打印上传功能
 - 使用 retrofit 进行网络请求，使用 okhttp 对 retrofit 进行 cookie 管理，使用 GSON 解析请求响应
-- 使用 sharedPreferences 存储用户信息，登陆成功后在每次上传任务时自动登录
+- 使用 sharedPreferences 存储登录信息，登录成功后在每次上传任务时自动登录
 
 ### 其他说明
 
@@ -32,6 +32,7 @@
   request
 - 如有同学有意开发 IOS 版本，希望能为你提供参考，也可直接与我交流。
 - 理论上该代码仅需更改服务器 IP 地址就可适配其他使用联创云打印且使用相同 API 的学校
+- 在 release 中下载APK，如需要在自己电脑上 build，请在 build.gradle 更改自己的证书文件及密码。
 
 ### TODO
 
