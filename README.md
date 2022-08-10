@@ -10,9 +10,7 @@
 - 也可使用选择文件按钮调动文件管理器，在文件管理器选择文件后上传（对于 Android 11 及以上的手机，如需访问
   android\data\ 内的文件，请使用其他有访问权限第三方文件管理器，如 RE、ES、SE 等）
 
-<img alt="手机上传页面" src="res/Phone.jpg" width="360"/><img alt="平板上传页面" src="res/Pad.jpg" width="360"/>
-
-![通过使用其他应用打开上传](res/VIEW.gif) ![通过分享上传](res/SEND.gif)
+![通过使用其他应用打开上传](res/VIEW.gif "通过使用其他应用打开上传") ![通过分享上传](res/SEND.gif "通过分享上传")
 
 ### 功能实现
 
