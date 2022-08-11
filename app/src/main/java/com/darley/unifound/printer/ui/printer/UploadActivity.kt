@@ -276,7 +276,6 @@ fun FileSelector(
                     bitmap = bitmap.asImageBitmap(), "",
                     modifier = Modifier.fillMaxWidth(),
                 )
-
                 Button(
                     onClick = { selectFile() },
                     colors = buttonColors(
