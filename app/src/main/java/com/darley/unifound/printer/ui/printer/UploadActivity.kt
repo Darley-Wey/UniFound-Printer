@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.rememberScrollableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -50,7 +49,6 @@ import com.darley.unifound.printer.ui.view.Loading
 import com.darley.unifound.printer.ui.view.UploadDivider
 import com.darley.unifound.printer.utils.FileUtil
 import kotlinx.coroutines.launch
-import java.io.File
 
 
 // Compose Activity 使用 ComponentActivity 来实现
@@ -364,10 +362,12 @@ fun Pages(
     viewModel: UploadViewModel = viewModel(),
 ) {
     @Composable
-    fun Page(
-    ) {
+    fun Page() {
         var from by rememberSaveable { mutableStateOf("1") }
         var to by rememberSaveable { mutableStateOf("1") }
+        // 控件每有更新时此处就会重新执行
+        viewModel.setUploadInfo("from", from.ifBlank { "1" })
+        viewModel.setUploadInfo("to", to.ifBlank { "1" })
         Row(
             // 垂直居中
             verticalAlignment = Alignment.CenterVertically
@@ -387,7 +387,7 @@ fun Pages(
                         from =
                             if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else "1"
                         // it为空时设置为1，否则设置为输入的数字，若输入的不是数字，则设置为1
-                        viewModel.setUploadInfo("from", it.ifBlank { "1" })
+//                        viewModel.setUploadInfo("from", from.ifBlank { "1" })
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
@@ -411,7 +411,7 @@ fun Pages(
                     onValueChange = {
                         to =
                             if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else from
-                        viewModel.setUploadInfo("to", it.ifBlank { from })
+//                        viewModel.setUploadInfo("to", it.ifBlank { to })
                     },
                     modifier = Modifier.padding(start = 6.dp),
                     keyboardOptions = KeyboardOptions(
@@ -436,7 +436,7 @@ fun Pages(
             .height(50.dp),
     ) {
         Text(
-            "页数：",
+            text = "页数：",
             modifier = Modifier
                 .padding(start = 20.dp)
                 .width(60.dp),
@@ -477,7 +477,8 @@ fun Pages(
 fun Copies(
     viewModel: UploadViewModel = viewModel(),
 ) {
-    var count by rememberSaveable { mutableStateOf("1") }
+    var copies by rememberSaveable { mutableStateOf("1") }
+    viewModel.setUploadInfo("copies", copies.ifBlank { "1" })
     Row(
         modifier = Modifier.height(50.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -491,9 +492,8 @@ fun Copies(
         )
         OutlinedButton(
             onClick = {
-                count =
-                    if (count.isBlank() || (count.toInt() == 1)) "1" else (count.toInt() - 1).toString()
-                viewModel.setUploadInfo("copies", count)
+                copies =
+                    if (copies.isBlank() || (copies.toInt() == 1)) "1" else (copies.toInt() - 1).toString()
             },
             // count最小为1
             // 调整按钮的大小，内边距设置为0
@@ -505,25 +505,23 @@ fun Copies(
             )
         }
         BasicTextField(
-            value = count,
+            value = copies,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number
             ),
             singleLine = true,
             onValueChange = {
                 // 只能输入数字，且不能为0
-                count =
+                copies =
                     if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else "1"
-                viewModel.setUploadInfo("copies", count.ifBlank { "1" })
             },
             modifier = Modifier
-                .width((20 + (count.length * 10)).dp)
+                .width((20 + (copies.length * 10)).dp)
                 .padding(start = 10.dp, top = 2.dp),
         )
         OutlinedButton(
             onClick = {
-                count = if (count.isBlank()) "1" else (count.toInt() + 1).toString()
-                viewModel.setUploadInfo("copies", count)
+                copies = if (copies.isBlank()) "1" else (copies.toInt() + 1).toString()
             },
             modifier = Modifier.size(25.dp, 25.dp),
             contentPadding = PaddingValues(0.dp)
