@@ -1,6 +1,11 @@
 package com.darley.unifound.printer.data.network
 
-import okhttp3.*
+import android.util.Log
+import com.darley.unifound.printer.data.dao.CookiesDao
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -9,7 +14,7 @@ class UnifoundCookie : CookieJar {
     private val cookieStore = HashMap<String, List<Cookie>>()
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         val cookies = cookieStore[url.host()]
-        println("reqCookies: $cookies")
+//        println("reqCookies: $cookies")
         return cookies ?: ArrayList()
     }
 
@@ -17,8 +22,16 @@ class UnifoundCookie : CookieJar {
         // 返回超过一个cookies时，刷新cookie
         if (cookies.size > 1) {
             cookieStore[url.host()] = cookies
+            val cookiesStr: MutableList<String> = ArrayList()
+            for (cookie in cookies) {
+                cookiesStr.add(cookie.toString())
+            }
+            CookiesDao.saveCookies(cookiesStr)
+            Log.d("ServiceCreator", "cookies[0]: ${cookies[0]}")
+            Log.d("ServiceCreator", "cookies[1]: ${cookies[1]}")
+            Log.d("ServiceCreator", "cookiesStr: $cookiesStr")
         }
-        println("resCookies: $cookies")
+//        println("resCookies: $cookies")
     }
 }
 
