@@ -1,8 +1,11 @@
 package com.darley.unifound.printer.ui.printer
 
+import android.app.Activity
+import android.app.ActivityOptions
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
@@ -21,8 +24,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.ButtonDefaults.buttonColors
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.sharp.ArrowBackIos
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,11 +45,14 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.darley.unifound.printer.APP.Companion.context
 import com.darley.unifound.printer.R
+import com.darley.unifound.printer.ui.WebViewActivity
 import com.darley.unifound.printer.ui.login.LoginActivity
 import com.darley.unifound.printer.ui.theme.PrinterTheme
 import com.darley.unifound.printer.ui.view.Loading
 import com.darley.unifound.printer.ui.view.UploadDivider
+import com.darley.unifound.printer.utils.ActivityCollector
 import com.darley.unifound.printer.utils.FileUtil
+import com.darley.unifound.printer.utils.ScreenUtil
 import kotlinx.coroutines.launch
 
 
@@ -59,7 +64,8 @@ class UploadActivity : ComponentActivity() {
         fun actionStart(context: Context, data: String) {
             val intent = Intent(context, UploadActivity::class.java)
             intent.putExtra("data", data)
-            context.startActivity(intent)
+            context.startActivity(intent,
+                ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle())
         }
     }
 
@@ -97,6 +103,12 @@ class UploadActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = if (ScreenUtil.isTabletWindow(this)) {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+        ActivityCollector.addActivity(this)
         val action = intent.action
         if (action == Intent.ACTION_VIEW || action == Intent.ACTION_SEND) {
             parseIntent(intent)
@@ -110,7 +122,8 @@ class UploadActivity : ComponentActivity() {
                 // 跳转登录页面
                 if (!viewModel.hasLoginInfo()) {
                     val intent = Intent(this@UploadActivity, LoginActivity::class.java)
-                    startActivity(intent)
+                    startActivity(intent,
+                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
                     finish()
                 }
                 var isUploading by viewModel.isUploading
@@ -119,7 +132,17 @@ class UploadActivity : ComponentActivity() {
                 ) {
                     Scaffold(
                         scaffoldState = scaffoldState,
-                        topBar = { UploadTopBar() },
+                        topBar = {
+                            UploadTopBar(
+                                goBack = { onBackPressed() },
+                                goWebView = {
+                                    WebViewActivity.actionStart(
+                                        this@UploadActivity,
+                                        WebViewActivity.DOC_URL
+                                    )
+                                }
+                            )
+                        },
                     )
                     // Scaffold 必须接收 innerPadding
                     { innerPadding ->
@@ -181,7 +204,13 @@ class UploadActivity : ComponentActivity() {
                             if (response.code == 0) {
                                 isUploading = false
                                 Log.d("UploadActivity", "上传成功${response.result!!.szJobName}")
-                                scope.launch { scaffoldState.snackbarHostState.showSnackbar("上传成功") }
+                                scope.launch {
+                                    scaffoldState.snackbarHostState.showSnackbar("上传成功")
+                                    WebViewActivity.actionStart(
+                                        this@UploadActivity,
+                                        WebViewActivity.UPLOAD_URL
+                                    )
+                                }
                             } else {
                                 response.message.let { message ->
                                     isUploading = false
@@ -209,16 +238,21 @@ class UploadActivity : ComponentActivity() {
 
 
 @Composable
-fun UploadTopBar() {
+fun UploadTopBar(goBack: () -> Unit, goWebView: () -> Unit) {
+    val context = LocalContext.current
+    val back = BitmapFactory.decodeResource(context.resources, R.drawable.back)
+    val folder = BitmapFactory.decodeResource(context.resources, R.drawable.folder)
     TopAppBar(
         modifier = Modifier.height(48.dp),
         backgroundColor = Color.White,
         navigationIcon = {
             IconButton(
-                onClick = {
-                    // TODO: handle click
-                }) {
-                Icon(Icons.Sharp.ArrowBackIos, "")
+                onClick = { goBack() },
+            ) {
+                Image(
+                    bitmap = back.asImageBitmap(), "返回",
+                    modifier = Modifier.size(width = 24.dp, height = 24.dp)
+                )
             }
         },
         title = {
@@ -226,24 +260,18 @@ fun UploadTopBar() {
                 modifier = Modifier.fillMaxWidth(),
                 text = "云打印",
                 textAlign = TextAlign.Center,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Normal,
             )
         },
         actions = {
             IconButton(
                 modifier = Modifier.width(68.dp),
-                onClick = {
-                    // TODO: handle click
-                },
+                onClick = { goWebView() },
             ) {
-                val context = LocalContext.current
-                val bitmap = BitmapFactory.decodeResource(
-                    context.resources,
-                    R.drawable.file
-                )
                 Image(
-                    bitmap = bitmap.asImageBitmap(), "",
-                    modifier = Modifier
-                        .size(width = 24.dp, height = 24.dp)
+                    bitmap = folder.asImageBitmap(), "待打印文档",
+                    modifier = Modifier.size(width = 24.dp, height = 24.dp)
                 )
             }
         },
@@ -273,7 +301,7 @@ fun FileSelector(
                 val bitmap =
                     BitmapFactory.decodeResource(context.resources, R.drawable.upload)
                 Image(
-                    bitmap = bitmap.asImageBitmap(), "",
+                    bitmap = bitmap.asImageBitmap(), "文件选择器背景图",
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
@@ -552,7 +580,7 @@ fun UploadButton(
             },
             enabled = viewModel.uploadFile.value != null,
         ) {
-            Text("上传")
+            Text("确定")
         }
     }
 }
@@ -569,7 +597,7 @@ fun DefaultPreview() {
         ) {
             Scaffold(
                 scaffoldState = scaffoldState,
-                topBar = { UploadTopBar() },
+                topBar = { },
             )
             { innerPadding ->
                 val paperOptions =

@@ -12,15 +12,19 @@
         android:name=".APP"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:requestLegacyExternalStorage="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Printer"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.WebViewActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="false" />
 
         <activity
             android:name=".ui.login.LoginActivity"
@@ -30,7 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.printer.UploadActivity"
             android:exported="true"
@@ -38,18 +41,18 @@
             android:theme="@style/Theme.Printer">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <!--VIEW需要设置scheme，可以为file或content,不写明报错-->
-                <!--每一个data项为独立项，组合写判断条件也是独立的-->
+                <!-- VIEW需要设置scheme，可以为file或content,不写明报错 -->
+                <!-- 每一个data项为独立项，组合写判断条件也是独立的 -->
                 <data android:scheme="content" />
                 <data android:scheme="file" />
-                <!--doc docm docx dot dotm dotx-->
+                <!-- doc docm docx dot dotm dotx -->
                 <data android:mimeType="application/msword" />
                 <data android:mimeType="application/vnd.ms-word.document.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-word.template.macroenabled.12" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.template" />
 
-                <!--xla xls xlt xlsm xlsx-->
+                <!-- xla xls xlt xlsm xlsx -->
                 <data android:mimeType="application/vnd.ms-excel" />
                 <data android:mimeType="application/vnd.ms-excel.sheet.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-excel.sheet.binary.macroenabled.12" />
@@ -57,7 +60,7 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.template" />
 
-                <!--ppt pot potm pptm pptx-->
+                <!-- ppt pot potm pptm pptx -->
                 <data android:mimeType="application/vnd.ms-powerpoint" />
                 <data android:mimeType="application/vnd.ms-powerpoint.presentation.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-powerpoint.slideshow.macroenabled.12" />
@@ -67,12 +70,12 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.slideshow" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.template" />
 
-                <!--xps wps wpt-->
+                <!-- xps wps wpt -->
                 <data android:mimeType="application/vnd.ms-xpsdocument" />
                 <data android:mimeType="application/vnd.ms-works" />
                 <data android:mimeType="application/vnd.ms-wpl" />
 
-                <!--odg odm odt ods-->
+                <!-- odg odm odt ods -->
                 <data android:mimeType="application/vnd.oasis.opendocument.text" />
                 <data android:mimeType="application/vnd.oasis.opendocument.text-master" />
                 <data android:mimeType="application/vnd.oasis.opendocument.text-template" />
@@ -80,12 +83,12 @@
                 <data android:mimeType="application/vnd.oasis.opendocument.spreadsheet" />
                 <data android:mimeType="application/vnd.oasis.opendocument.presentation" />
 
-                <!--rtf pdf xml-->
+                <!-- rtf pdf xml -->
                 <data android:mimeType="application/rtf" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/xml" />
 
-                <!--图片 文本-->
+                <!-- 图片 文本 -->
                 <data android:mimeType="image/jpeg" />
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/vnd.mozilla.apng" />
@@ -98,18 +101,17 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
-                <!--SEND的没有scheme属性，不可设置，设置后永远没有满足项-->
-                <!--doc docm docx dot dotm dotx-->
+                <!-- SEND的没有scheme属性，不可设置，设置后永远没有满足项 -->
+                <!-- doc docm docx dot dotm dotx -->
                 <data android:mimeType="application/msword" />
                 <data android:mimeType="application/vnd.ms-word.document.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-word.template.macroenabled.12" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.template" />
 
-                <!--xla xls xlt xlsm xlsx-->
+                <!-- xla xls xlt xlsm xlsx -->
                 <data android:mimeType="application/vnd.ms-excel" />
                 <data android:mimeType="application/vnd.ms-excel.sheet.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-excel.sheet.binary.macroenabled.12" />
@@ -117,7 +119,7 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.template" />
 
-                <!--ppt pot potm pptm pptx-->
+                <!-- ppt pot potm pptm pptx -->
                 <data android:mimeType="application/vnd.ms-powerpoint" />
                 <data android:mimeType="application/vnd.ms-powerpoint.presentation.macroenabled.12" />
                 <data android:mimeType="application/vnd.ms-powerpoint.slideshow.macroenabled.12" />
@@ -127,12 +129,12 @@
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.slideshow" />
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.template" />
 
-                <!--xps wps wpt-->
+                <!-- xps wps wpt -->
                 <data android:mimeType="application/vnd.ms-xpsdocument" />
                 <data android:mimeType="application/vnd.ms-works" />
                 <data android:mimeType="application/vnd.ms-wpl" />
 
-                <!--odg odm odt ods-->
+                <!-- odg odm odt ods -->
                 <data android:mimeType="application/vnd.oasis.opendocument.text" />
                 <data android:mimeType="application/vnd.oasis.opendocument.text-master" />
                 <data android:mimeType="application/vnd.oasis.opendocument.text-template" />
@@ -140,12 +142,12 @@
                 <data android:mimeType="application/vnd.oasis.opendocument.spreadsheet" />
                 <data android:mimeType="application/vnd.oasis.opendocument.presentation" />
 
-                <!--rtf pdf xml-->
+                <!-- rtf pdf xml -->
                 <data android:mimeType="application/rtf" />
                 <data android:mimeType="application/pdf" />
                 <data android:mimeType="application/xml" />
 
-                <!--图片 文本-->
+                <!-- 图片 文本 -->
                 <data android:mimeType="image/jpeg" />
                 <data android:mimeType="image/png" />
                 <data android:mimeType="image/vnd.mozilla.apng" />
@@ -159,7 +161,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

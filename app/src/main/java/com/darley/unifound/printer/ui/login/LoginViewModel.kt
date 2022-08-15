@@ -7,7 +7,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.darley.unifound.printer.R
 import com.darley.unifound.printer.data.Repository
-import com.darley.unifound.printer.data.model.LoggedInUser
+import com.darley.unifound.printer.data.dao.LoginInfoDao
 import com.darley.unifound.printer.data.model.LoginInfo
 import com.darley.unifound.printer.data.network.LoginResponse
 
@@ -22,7 +22,7 @@ class LoginViewModel : ViewModel() {
 
 
     fun hasLoginInfo() = Repository.hasLoginInfo()
-
+    fun getLoginInfo() = LoginInfoDao.getLoginInfo()
     // 在开始观察后，loginInfoLiveData 每发生变化就会发送网络请求。
     val loginLiveData = Transformations.switchMap(loginInfoLiveData) {
         Repository.login(it.username, it.password)
@@ -36,12 +36,10 @@ class LoginViewModel : ViewModel() {
     fun loginResult(loginResponse: LoginResponse) {
         // can be launched in a separate asynchronous job
         val code = loginResponse.code
-        val result = loginResponse.result
         val message = loginResponse.message
         if (code == 0) {
             _loginResult.value =
-                LoginResult(success = LoggedInUser(userId = result!!.szLogonName,
-                    displayName = result.szTrueName))
+                LoginResult(success = "登录成功")
         } else {
             _loginResult.value = LoginResult(error = message)
         }

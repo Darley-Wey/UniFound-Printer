@@ -1,7 +1,7 @@
 package com.darley.unifound.printer.ui.login
 
-import android.app.Activity
-import android.content.Context
+import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -13,16 +13,14 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.darley.unifound.printer.R
-import com.darley.unifound.printer.data.model.LoggedInUser
 import com.darley.unifound.printer.databinding.ActivityLoginBinding
-import com.darley.unifound.printer.ui.printer.UploadActivity
+import com.darley.unifound.printer.ui.WebViewActivity
+import com.darley.unifound.printer.utils.BaseActivity
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
 
 
     private lateinit var loginViewModel: LoginViewModel
@@ -53,7 +51,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showDialogTipUserGoToAppSetting() {
-        val dialog = android.app.AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
         dialog.setTitle("存储权限未开启")
         dialog.setMessage("请在-应用设置-权限-中，允许使用存储权限来保存您的数据")
         dialog.setPositiveButton("立即开启") { _, _ ->
@@ -70,27 +68,36 @@ class LoginActivity : AppCompatActivity() {
         // 检查存储权限
         if (ContextCompat.checkSelfPermission(
                 this,
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            requestPermissions(arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 0)
         }
 
-        // TODO webView
-        /*val webView = WebView(this)
-        webView.settings.javaScriptEnabled = true
-        webView.webViewClient = WebViewClient()
-        webView.loadUrl("http://10.135.0.139:9130/client/new/cprintMobile/login.html")
-        setContentView(webView)*/
 
         loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
-        if (loginViewModel.hasLoginInfo()) {
-            UploadActivity.actionStart(this, "login")
-            finish()
-        }
-
         binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+
+        // 实时监听登录结果变化
+        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
+            val loginResult = it ?: return@Observer
+//            loading.visibility = View.GONE
+            if (loginResult.error != null) {
+                showLoginFailed(loginResult.error)
+            }
+            if (loginResult.success != null) {
+                //Complete and destroy login activity once successful
+                updateUi(loginResult.success)
+            }
+            setResult(RESULT_OK)
+        })
+
+        if (loginViewModel.hasLoginInfo()) {
+            val loginInfo = loginViewModel.getLoginInfo()!!
+            loginViewModel.login(loginInfo.username, loginInfo.password)
+        } else {
+            setContentView(binding.root)
+        }
 
 
         val username = binding.username
@@ -112,19 +119,6 @@ class LoginActivity : AppCompatActivity() {
             }
         })
 
-        // 实时监听登录结果变化
-        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
-            val loginResult = it ?: return@Observer
-            loading.visibility = View.GONE
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
-            }
-            if (loginResult.success != null) {
-                //Complete and destroy login activity once successful
-                updateUiWithUser(loginResult.success)
-            }
-            setResult(Activity.RESULT_OK)
-        })
 
         // 监听登录网络请求
         loginViewModel.loginLiveData.observe(this@LoginActivity) {
@@ -172,15 +166,13 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUiWithUser(model: LoggedInUser) {
-        val welcome = getString(R.string.welcome)
-        val displayName = model.displayName
+    private fun updateUi(result: String) {
         Toast.makeText(
             applicationContext,
-            "$welcome $displayName",
+            result,
             Toast.LENGTH_LONG
         ).show()
-        UploadActivity.actionStart(this, "login")
+        WebViewActivity.actionStart(this, WebViewActivity.INDEX_URL)
         finish()
     }
 
