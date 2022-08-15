@@ -21,6 +21,7 @@ object Repository {
     fun hasLoginInfo() = LoginInfoDao.hasLoginInfo()
     private fun saveLoginInfo(loginInfo: LoginInfo) = LoginInfoDao.saveLoginInfo(loginInfo)
     private fun getLoginInfo() = LoginInfoDao.getLoginInfo()
+    fun rmLoginInfo() = LoginInfoDao.rmLoginInfo()
 
 
     private fun isOnline(): Boolean {
