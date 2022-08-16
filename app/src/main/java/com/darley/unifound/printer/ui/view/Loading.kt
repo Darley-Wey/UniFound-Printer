@@ -11,9 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable()
-fun Loading(state: String) {
+fun Loading(state: String = "Loading") {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -28,19 +29,19 @@ fun Loading(state: String) {
         }
         Box(
             modifier = Modifier
-                .size(100.dp, 100.dp)
+                .size(120.dp, 120.dp)
                 .background(color = Color.LightGray),
             contentAlignment = Alignment.Center,
         ) {
             Column(
-//                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 CircularProgressIndicator()
                 Text(
                     text = state,
-//                modifier = Modifier.padding(top = 60.dp)
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 10.dp)
                 )
             }
         }

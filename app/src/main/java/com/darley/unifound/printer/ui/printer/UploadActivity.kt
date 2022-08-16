@@ -201,14 +201,18 @@ class UploadActivity : ComponentActivity() {
                         Log.d("UploadActivity", "上传中")
                         Loading(state = "上传中")
                         uploadResponse?.onSuccess { response ->
+                            isUploading = false
+                            viewModel.setFile(null)
                             if (response.code == 0) {
-                                isUploading = false
                                 Log.d("UploadActivity", "上传成功${response.result!!.szJobName}")
                                 scope.launch {
-                                    scaffoldState.snackbarHostState.showSnackbar("上传成功")
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        message = "上传成功",
+                                        duration = SnackbarDuration.Short
+                                    )
                                     WebViewActivity.actionStart(
                                         this@UploadActivity,
-                                        WebViewActivity.UPLOAD_URL
+                                        WebViewActivity.DOC_URL
                                     )
                                 }
                             } else {
@@ -225,8 +229,7 @@ class UploadActivity : ComponentActivity() {
                             Log.d("UploadActivity", "上传失败")
                             isUploading = false
                             scope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(message = "上传失败，请检查网络或文件",
-                                    duration = SnackbarDuration.Short)
+                                scaffoldState.snackbarHostState.showSnackbar(message = "上传失败，请检查网络或文件")
                             }
                         }
                     }
@@ -401,8 +404,8 @@ fun Pages(
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp, 25.dp)
-                    .padding(start = 8.dp)
+                    .size(43.dp, 25.dp)
+                    .padding(start = 5.dp)
                     .border(1.dp, Color.Gray),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -414,7 +417,6 @@ fun Pages(
                         from =
                             if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else "1"
                         // it为空时设置为1，否则设置为输入的数字，若输入的不是数字，则设置为1
-//                        viewModel.setUploadInfo("from", from.ifBlank { "1" })
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number
@@ -426,11 +428,11 @@ fun Pages(
                 text = " ~",
             )
             Box(
-                contentAlignment = Alignment.CenterStart,
                 modifier = Modifier
-                    .size(40.dp, 25.dp)
+                    .size(43.dp, 25.dp)
                     .padding(start = 5.dp)
                     .border(1.dp, Color.Gray),
+                contentAlignment = Alignment.CenterStart,
             ) {
                 BasicTextField(
                     value = to,
@@ -438,7 +440,6 @@ fun Pages(
                     onValueChange = {
                         to =
                             if (it.isBlank() || (it.isDigitsOnly() && it.toInt() > 0 && it.toInt() < 9999)) it else from
-//                        viewModel.setUploadInfo("to", it.ifBlank { to })
                     },
                     modifier = Modifier.padding(start = 6.dp),
                     keyboardOptions = KeyboardOptions(
@@ -576,7 +577,6 @@ fun UploadButton(
                 viewModel.isUploading.value = true
                 viewModel.setUploadData()
                 viewModel.upload()
-                viewModel.setFile(null)
             },
             enabled = viewModel.uploadFile.value != null,
         ) {
