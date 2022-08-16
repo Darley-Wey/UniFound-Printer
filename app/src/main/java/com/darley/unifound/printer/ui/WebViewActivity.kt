@@ -94,6 +94,10 @@ class WebViewActivity : BaseActivity() {
         Log.d("WebViewActivity", "cookies: ${cookieManager.getCookie(uri.toString())}")
         webView.run {
             settings.javaScriptEnabled = true
+            // 开启后 webView 内的中英文语言切换可生效
+//            settings.domStorageEnabled = true
+            // TODO 根据系统语言状态执行 JS 脚本切换语言，应放在 onPageFinished 中执行
+            // evaluateJavascript("""localStorage.setItem("lang", "2")""", null)
             webViewClient = printerWebViewClient
             // 浏览器下载文件
             setDownloadListener { url, _, _, _, _ ->
