@@ -39,7 +39,9 @@ class UnifoundCookie : CookieJar {
 object ServiceCreator {
     // 创建一个okHttpClient对象，用于管理cookie和timeout
     private val client =
-        OkHttpClient.Builder().cookieJar(UnifoundCookie()).writeTimeout(0, TimeUnit.SECONDS)
+        OkHttpClient.Builder().cookieJar(UnifoundCookie())
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .writeTimeout(0, TimeUnit.SECONDS)
             .readTimeout(0, TimeUnit.SECONDS).build()
 
     private const val BASE_URL = "http://10.135.0.139:9130/"
