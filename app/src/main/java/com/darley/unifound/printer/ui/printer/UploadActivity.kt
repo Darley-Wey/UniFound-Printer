@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -48,6 +49,7 @@ import com.darley.unifound.printer.R
 import com.darley.unifound.printer.ui.WebViewActivity
 import com.darley.unifound.printer.ui.login.LoginActivity
 import com.darley.unifound.printer.ui.theme.PrinterTheme
+import com.darley.unifound.printer.ui.view.About
 import com.darley.unifound.printer.ui.view.Loading
 import com.darley.unifound.printer.ui.view.UploadDivider
 import com.darley.unifound.printer.utils.ActivityCollector
@@ -192,6 +194,11 @@ class UploadActivity : ComponentActivity() {
                                     UploadDivider()
                                     Spacer(modifier = Modifier.height(20.dp))
                                     UploadButton()
+                                    About(onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW,
+                                            Uri.parse("https://gitee.com/Darley-Wey/Unifound-Printer"))
+                                        startActivity(intent)
+                                    })
                                 }
                             }
                         }
@@ -590,15 +597,14 @@ fun UploadButton(
 @Composable
 fun DefaultPreview() {
     PrinterTheme {
-        // A surface container using the 'background' color from the theme
         val scaffoldState = rememberScaffoldState()
         Box(
             contentAlignment = Alignment.Center,
         ) {
             Scaffold(
                 scaffoldState = scaffoldState,
-                topBar = { },
             )
+            // Scaffold 必须接收 innerPadding
             { innerPadding ->
                 val paperOptions =
                     listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
@@ -611,27 +617,43 @@ fun DefaultPreview() {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                         .padding(innerPadding),
                     contentAlignment = Alignment.TopCenter,
                 ) {
-//                        println("height $maxHeight")
                     Column(
                         modifier = Modifier
-                            .width(350.dp)
+                            .fillMaxWidth()
                             .padding(top = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+                        val configuration = LocalConfiguration.current
+                        val screenHeight = configuration.screenHeightDp.dp
+                        println("height $screenHeight")
                         FileSelector({ })
-                        UploadRadioOption(paper, paperOptions)
-                        UploadDivider()
-                        UploadRadioOption(duplex, duplexOptions)
-                        UploadDivider()
-                        UploadRadioOption(color, colorOptions)
-                        UploadDivider()
-                        Pages()
-                        UploadDivider()
-                        Copies()
-                        UploadDivider()
-                        UploadButton()
+                        Spacer(modifier = Modifier.height(if (screenHeight > 900.dp) 40.dp else 20.dp))
+                        Column(
+                            modifier = Modifier.width(400.dp),
+                            verticalArrangement = if (screenHeight > 900.dp) Arrangement.spacedBy(
+                                16.dp
+                            ) else Arrangement.spacedBy(
+                                0.dp
+                            ),
+                        ) {
+                            UploadRadioOption(paper, paperOptions)
+                            UploadDivider()
+                            UploadRadioOption(duplex, duplexOptions)
+                            UploadDivider()
+                            UploadRadioOption(color, colorOptions)
+                            UploadDivider()
+                            Pages()
+                            UploadDivider()
+                            Copies()
+                            UploadDivider()
+                            Spacer(modifier = Modifier.height(20.dp))
+                            UploadButton()
+                            About()
+                        }
                     }
                 }
             }
