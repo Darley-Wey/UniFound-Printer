@@ -47,7 +47,8 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
-        freeCompilerArgs += ['-Xjvm-default=enable']
+//        低版本 compose 需手动开启Xjvm-default选项
+//        freeCompilerArgs += ['-Xjvm-default=all|all-compatibility']
     }
     buildFeatures {
         viewBinding true
