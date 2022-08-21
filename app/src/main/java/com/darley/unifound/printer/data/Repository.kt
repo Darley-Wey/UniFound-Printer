@@ -1,8 +1,7 @@
 package com.darley.unifound.printer.data
 
-import android.content.Context
-import android.net.ConnectivityManager
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import com.darley.unifound.printer.APP.Companion.context
 import com.darley.unifound.printer.data.dao.LoginInfoDao
@@ -11,10 +10,10 @@ import com.darley.unifound.printer.data.network.LoginData
 import com.darley.unifound.printer.data.network.LoginResponse
 import com.darley.unifound.printer.data.network.PrinterNetwork
 import com.darley.unifound.printer.data.network.UploadResponse
+import com.darley.unifound.printer.isOnline
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import kotlin.coroutines.CoroutineContext
 
 object Repository {
 
@@ -23,26 +22,14 @@ object Repository {
     private fun getLoginInfo() = LoginInfoDao.getLoginInfo()
 
 
-    private fun isOnline(): Boolean {
-        val connMgr = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connMgr.activeNetworkInfo
-        var isWifiConn = false
-        connMgr.allNetworks.forEach { network ->
-            connMgr.getNetworkInfo(network)?.apply {
-                if (type == ConnectivityManager.TYPE_WIFI) {
-                    isWifiConn = isWifiConn or isConnected
-                }
-            }
-        }
-        return networkInfo?.isConnected == true && isWifiConn
-    }
+    private fun isOnline() = context.isOnline()
 
-    // 网络请求不可发生在主线程，所以需要切换到IO线程。liveData提供了一个简单的方法来让你在IO线程中调用一个异步操作。
-    // 在这里，我们使用liveData来获取结果，并且在主线程中更新UI。
-    fun login(username: String, password: String) = fire(Dispatchers.IO) {
+
+    fun login(username: String, password: String) = fire() {
         if (!isOnline()) {
             Result.success(LoginResponse(code = 1, message = "网络不可用，请连接WIFI", result = null))
         } else {
+            // 调用挂起函数，当前协程会被阻塞，事件循环进入了被调用函数
             val authTokenResponse = PrinterNetwork.getAuthToken()
             val loginData = LoginData(
                 username, password, authTokenResponse.szToken
@@ -67,7 +54,7 @@ object Repository {
         dwCopies: RequestBody,
         BackURL: RequestBody,
         dwTo: RequestBody,
-    ) = fire(Dispatchers.IO) {
+    ) = fire() {
         if (!isOnline()) {
             Result.success(UploadResponse(code = 1, message = "网络不可用，请连接WIFI", result = null))
         } else if (!hasLoginInfo()) {
@@ -92,8 +79,11 @@ object Repository {
         }
     }
 
-    private fun <T> fire(context: CoroutineContext, block: suspend () -> Result<T>) =
-        liveData(context) {
+    // 定义一个统一的将网络请求响应封装为liveData并返回的方法，调用了挂起函数
+    private fun <T> fire(block: suspend () -> Result<T>): LiveData<Result<T>> =
+    // 网络请求不可发生在主线程，高IO操作切换到IO线程。
+        // liveData方法可以指定在子线程中调用一个挂起函数，此处实现了使用非挂起函数调用挂起函数
+        liveData(Dispatchers.IO) {
             val result = try {
                 block()
             } catch (e: Exception) {
