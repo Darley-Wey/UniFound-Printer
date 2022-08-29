@@ -13,6 +13,7 @@ import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.darley.unifound.printer.R
+import com.darley.unifound.printer.data.Repository
 import com.darley.unifound.printer.data.dao.CookiesDao
 import com.darley.unifound.printer.ui.login.LoginActivity
 import com.darley.unifound.printer.ui.printer.UploadActivity
@@ -29,12 +30,14 @@ class WebViewActivity : BaseActivity() {
                 ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle())
         }
 
-        private const val HOST = "http://10.135.0.139:9130/"
-        private const val Client = "client/new/cprintMobile/"
-        const val LOGIN_URL = "$HOST${Client}login.html"
-        const val INDEX_URL = "$HOST${Client}index.html"
-        const val UPLOAD_URL = "$HOST${Client}cprint.html"
-        const val DOC_URL = "$HOST${Client}printDoc.html"
+        private const val HOST = "http://10.135.0.139:9130"
+        private const val Client = "client/new/cprintMobile"
+        const val LOGIN_URL = "${HOST}/${Client}/login.html"
+        const val INDEX_URL = "${HOST}/${Client}/index.html"
+        const val UPLOAD_URL = "${HOST}/${Client}/cprint.html"
+        const val DOC_URL = "${HOST}/${Client}/printDoc.html"
+        const val SETTING_URL = "${HOST}/${Client}/setting.html"
+        const val LOGOUT_URL = "${HOST}/${Client}/logout.html"
     }
 
     private lateinit var webView: WebView
@@ -43,14 +46,21 @@ class WebViewActivity : BaseActivity() {
     private val printerWebViewClient = object : WebViewClient() {
         @Deprecated("Deprecated in Java")
         override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+            val loginIntent = Intent(this@WebViewActivity, LoginActivity::class.java)
             return when (url) {
                 UPLOAD_URL -> {
                     UploadActivity.actionStart(this@WebViewActivity, "webView")
                     true
                 }
                 LOGIN_URL -> {
-                    val intent = Intent(this@WebViewActivity, LoginActivity::class.java)
-                    startActivity(intent,
+                    startActivity(loginIntent,
+                        ActivityOptions.makeSceneTransitionAnimation(this@WebViewActivity)
+                            .toBundle())
+                    true
+                }
+                LOGOUT_URL -> {
+                    Repository.rmLoginInfo()
+                    startActivity(loginIntent,
                         ActivityOptions.makeSceneTransitionAnimation(this@WebViewActivity)
                             .toBundle())
                     true
@@ -58,6 +68,19 @@ class WebViewActivity : BaseActivity() {
                 else -> {
                     false
                 }
+            }
+        }
+
+        override fun onPageFinished(webView: WebView, url: String) {
+            super.onPageFinished(webView, url)
+            if (url == SETTING_URL) {
+                Log.d("WebViewActivity", "setting")
+                // 显示退出按钮
+                webView.evaluateJavascript("""$("#loginout_btn").show();""",
+                    null)
+                // 劫持退出按钮动作
+                webView.evaluateJavascript("""$(".unbind-btn").on("click", function () {window.location.href = "./logout.html";})""",
+                    null)
             }
         }
     }

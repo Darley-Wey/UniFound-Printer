@@ -21,5 +21,11 @@ object LoginInfoDao {
         return Gson().fromJson(user, LoginInfo::class.java)
     }
 
+    fun rmLoginInfo() {
+        sharedPreferences().edit() {
+            remove("login-info")
+        }
+    }
+
     fun hasLoginInfo() = sharedPreferences().contains("login-info")
 }

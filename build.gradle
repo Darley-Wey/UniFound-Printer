@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        // 最新稳定版1.1.1指定kotlin版本1.6.10，需手动开启Xjvm-default选项
+        // 1.1.1及之前，需手动开启Xjvm-default选项
         compose_version = '1.2.0'
         lifecycle_version = '2.5.1'
     }

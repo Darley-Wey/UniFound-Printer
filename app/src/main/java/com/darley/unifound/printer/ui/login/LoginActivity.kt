@@ -18,6 +18,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.darley.unifound.printer.databinding.ActivityLoginBinding
 import com.darley.unifound.printer.ui.WebViewActivity
+import com.darley.unifound.printer.utils.ActivityCollector
 import com.darley.unifound.printer.utils.BaseActivity
 
 class LoginActivity : BaseActivity() {
@@ -162,6 +163,10 @@ class LoginActivity : BaseActivity() {
             loading.visibility = View.VISIBLE
             loginViewModel.login(username.text.toString(), password.text.toString())
         }
+    }
+
+    override fun onBackPressed() {
+        ActivityCollector.finishAll()
     }
 
     private fun updateUi(result: String) {
