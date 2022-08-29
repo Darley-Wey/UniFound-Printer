@@ -31,9 +31,11 @@
 
 - 开发该 App 旨在学习 Android 开发和为自己为同学们提供便利，如有问题和 bug 请在 issue 反馈
 - 本人第一次做 Android 开发，kotlin 也是现学的，如果有更好的方案或对代码有意见请在 issue 反馈或提交 pull request
-- 如有同学有意开发 IOS 版本，希望能为你提供参考，也可直接与我交流。
 - 理论上该代码仅需更改服务器 IP 地址就可适配其他使用联创云打印且使用相同 API 的学校
-- 上架应用商店需要申请软著，周期较长，故只在 release 中提供 APK，如需在自己电脑上 build，请在 build.gradle 更改为自己的证书文件及密码。
+- 上架应用商店需要申请软著，周期较长，故只在
+  [releases](https://github.com/Darley-Wey/UniFound-Printer/releases)
+  [发行版](https://gitee.com/Darley-Wey/Unifound-Printer/releases)
+  中提供 APK，如需在自己电脑上 build，请在 build.gradle 更改为自己的证书文件及密码。
 - 如果觉得软件好用，可以分享给你的同学，也可以在[Gitee仓库](https://gitee.com/Darley-Wey/Unifound-Printer)
   桌面版网页下方捐赠按钮适量捐赠以表支持，谢谢！
 
