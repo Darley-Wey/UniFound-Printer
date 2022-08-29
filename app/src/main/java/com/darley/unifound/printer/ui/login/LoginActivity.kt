@@ -77,11 +77,15 @@ class LoginActivity : BaseActivity() {
 
         loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
         binding = ActivityLoginBinding.inflate(layoutInflater)
+        val username = binding.username
+        val password = binding.password
+        val login = binding.login
+        val loading = binding.loading
 
         // 实时监听登录结果变化
         loginViewModel.loginResult.observe(this@LoginActivity, Observer {
             val loginResult = it ?: return@Observer
-//            loading.visibility = View.GONE
+            loading.visibility = View.GONE
             if (loginResult.error != null) {
                 showLoginFailed(loginResult.error)
             }
@@ -98,12 +102,6 @@ class LoginActivity : BaseActivity() {
         } else {
             setContentView(binding.root)
         }
-
-
-        val username = binding.username
-        val password = binding.password
-        val login = binding.login
-        val loading = binding.loading
 
 
         // 监听输入框的变化，实时错误检查
