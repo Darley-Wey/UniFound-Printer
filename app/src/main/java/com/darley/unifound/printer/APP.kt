@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import com.darley.unifound.printer.APP.Companion.context
+import com.umeng.commonsdk.UMConfigure
 
 class APP : Application() {
     companion object {
@@ -16,6 +17,14 @@ class APP : Application() {
     override fun onCreate() {
         super.onCreate()
         context = applicationContext
+        val channel = "releases"
+        UMConfigure.preInit(context, "630f5c6e88ccdf4b7e1c454a", channel)
+        UMConfigure.init(this,
+            "630f5c6e88ccdf4b7e1c454a",
+            channel,
+            UMConfigure.DEVICE_TYPE_PHONE,
+            "")
+//        UMConfigure.setLogEnabled(true)
     }
 }
 
