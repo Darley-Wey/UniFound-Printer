@@ -26,8 +26,10 @@ class WebViewActivity : BaseActivity() {
         fun actionStart(context: Context, data: String) {
             val intent = Intent(context, WebViewActivity::class.java)
             intent.data = Uri.parse(data)
-            context.startActivity(intent,
-                ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle())
+            context.startActivity(
+                intent,
+                ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle()
+            )
         }
 
         private const val HOST = "http://10.135.0.139:9130"
@@ -53,16 +55,20 @@ class WebViewActivity : BaseActivity() {
                     true
                 }
                 LOGIN_URL -> {
-                    startActivity(loginIntent,
+                    startActivity(
+                        loginIntent,
                         ActivityOptions.makeSceneTransitionAnimation(this@WebViewActivity)
-                            .toBundle())
+                            .toBundle()
+                    )
                     true
                 }
                 LOGOUT_URL -> {
                     Repository.rmLoginInfo()
-                    startActivity(loginIntent,
+                    startActivity(
+                        loginIntent,
                         ActivityOptions.makeSceneTransitionAnimation(this@WebViewActivity)
-                            .toBundle())
+                            .toBundle()
+                    )
                     true
                 }
                 else -> {
@@ -76,11 +82,15 @@ class WebViewActivity : BaseActivity() {
             if (url == SETTING_URL) {
                 Log.d("WebViewActivity", "setting")
                 // 显示退出按钮
-                webView.evaluateJavascript("""$("#loginout_btn").show();""",
-                    null)
+                webView.evaluateJavascript(
+                    """$("#loginout_btn").show();""",
+                    null
+                )
                 // 劫持退出按钮动作
-                webView.evaluateJavascript("""$(".unbind-btn").on("click", function () {window.location.href = "./logout.html";})""",
-                    null)
+                webView.evaluateJavascript(
+                    """$(".unbind-btn").on("click", function () {window.location.href = "./logout.html";})""",
+                    null
+                )
             }
         }
     }
@@ -115,7 +125,7 @@ class WebViewActivity : BaseActivity() {
         setWebViewWidth(webView, resources.configuration)
         setWebCookies(cookieManager, uri)
         Log.d("WebViewActivity", "cookies: ${cookieManager.getCookie(uri.toString())}")
-        webView.run {
+        webView.apply {
             settings.javaScriptEnabled = true
             // 开启后 webView 内的中英文语言切换可生效
 //            settings.domStorageEnabled = true
@@ -138,6 +148,7 @@ class WebViewActivity : BaseActivity() {
         setWebViewWidth(webView, newConfig)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         Log.d("WebViewActivity", "onBackPressed: ${webView.url == INDEX_URL}")
         if (webView.url == INDEX_URL) {
