@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.darley.unifound.printer">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!--    您的应用可能需要查询一组具有特定用途的应用或与之交互，但您可能不知道要添加的具体软件包名称。
+    在这种情况下，您可以在 <queries> 元素中列出 intent 过滤器签名。
+    然后，您的应用就可以发现具有匹配的 <intent-filter> 元素的应用。
+    以下示例允许您的应用看到支持 JPEG 图片共享功能的已安装应用-->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="image/jpeg" />
+        </intent>
+    </queries>
 
     <application
         android:name=".APP"
