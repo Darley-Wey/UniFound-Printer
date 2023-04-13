@@ -13,6 +13,7 @@ object PrinterNetwork {
 
     // private val loginService = ServiceCreator.create<LoginService>(LoginService::class.java)
     private val uploadService = ServiceCreator.create<UploadService>()
+    suspend fun getPublicKey() = loginService.getPublicKey().await()
 
     // service 的方法返回 Call<Response> 对象，然后调用扩展的 await 方法
     suspend fun getAuthToken() = loginService.getAuthToken().await()
@@ -29,6 +30,8 @@ object PrinterNetwork {
     ) = uploadService.upload(
         file, dwPaperId, dwDuplex, dwColor, dwFrom, dwCopies, BackURL, dwTo
     ).await()
+
+    suspend fun check() = loginService.check().await()
 
     //    suspend 挂起函数，实现协程，使之可以调用其他挂起函数。类.函数名()，对类定义一个新的扩展函数
     private suspend fun <T> Call<T>.await(): T {

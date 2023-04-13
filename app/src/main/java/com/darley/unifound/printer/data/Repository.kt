@@ -11,6 +11,7 @@ import com.darley.unifound.printer.data.network.LoginResponse
 import com.darley.unifound.printer.data.network.PrinterNetwork
 import com.darley.unifound.printer.data.network.UploadResponse
 import com.darley.unifound.printer.isOnline
+import com.darley.unifound.printer.utils.LoginUtil
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -31,9 +32,13 @@ object Repository {
             Result.success(LoginResponse(code = 1, message = "网络不可用，请连接WIFI", result = null))
         } else {
             // 调用挂起函数，当前协程会被阻塞，事件循环进入了被调用函数
+            val publicKeyResponse = PrinterNetwork.getPublicKey()
+            val publicKey = publicKeyResponse.result.publicKey
+            val nonceStr = publicKeyResponse.result.nonceStr
+            val pwd = LoginUtil.encryptWithPublicKey(publicKey, "$password;$nonceStr")
             val authTokenResponse = PrinterNetwork.getAuthToken()
             val loginData = LoginData(
-                username, password, authTokenResponse.szToken
+                username, pwd, authTokenResponse.szToken
             )
             val loginResponse = PrinterNetwork.login(loginData)
             if (loginResponse.code == 0) {
@@ -61,16 +66,22 @@ object Repository {
         } else if (!hasLoginInfo()) {
             Result.success(UploadResponse(code = 2, message = "没有登陆信息，请重新登陆", result = null))
         } else {
-            val authTokenResponse = PrinterNetwork.getAuthToken()
-            // 上传时先自动执行一遍登录刷新 cookies， 用户名和密码从存储的账号密码中获取
-            val loginInfo = getLoginInfo()!!
-            val loginData = LoginData(
-                loginInfo.username,
-                loginInfo.password,
-                authTokenResponse.szToken
-            )
-            val loginResponse = PrinterNetwork.login(loginData)
-            println("loginResponse: $loginResponse")
+            val checkRes = PrinterNetwork.check()
+            if (checkRes.code != 0) {
+                // 登录失效，自动执行一遍登录刷新 cookies， 用户名和密码从存储的账号密码中获取
+                val loginInfo = getLoginInfo()!!
+                val publicKeyResponse = PrinterNetwork.getPublicKey()
+                val publicKey = publicKeyResponse.result.publicKey
+                val nonceStr = publicKeyResponse.result.nonceStr
+                val pwd =
+                    LoginUtil.encryptWithPublicKey(publicKey, "${loginInfo.password};$nonceStr")
+                val authTokenResponse = PrinterNetwork.getAuthToken()
+                val loginData = LoginData(
+                    loginInfo.username, pwd, authTokenResponse.szToken
+                )
+                val loginResponse = PrinterNetwork.login(loginData)
+                Log.d("retrofit", loginResponse.toString())
+            }
             val uploadResponse = PrinterNetwork.upload(
                 file, dwPaperId, dwDuplex, dwColor, dwFrom, dwCopies, BackURL, dwTo
             )
