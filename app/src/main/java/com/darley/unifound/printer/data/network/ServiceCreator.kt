@@ -2,6 +2,7 @@ package com.darley.unifound.printer.data.network
 
 import android.util.Log
 import com.darley.unifound.printer.data.dao.CookiesDao
+import me.jessyan.progressmanager.ProgressManager
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
@@ -10,7 +11,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-class UnifoundCookie : CookieJar {
+class UniFoundCookie : CookieJar {
     private val cookieStore = HashMap<String, List<Cookie>>()
     override fun loadForRequest(url: HttpUrl): List<Cookie> {
         val cookies = cookieStore[url.host()]
@@ -39,7 +40,7 @@ class UnifoundCookie : CookieJar {
 object ServiceCreator {
     // 创建一个okHttpClient对象，用于管理cookie和timeout
     private val client =
-        OkHttpClient.Builder().cookieJar(UnifoundCookie())
+        ProgressManager.getInstance().with(OkHttpClient.Builder()).cookieJar(UniFoundCookie())
             .connectTimeout(5, TimeUnit.SECONDS)
             .writeTimeout(0, TimeUnit.SECONDS)
             .readTimeout(0, TimeUnit.SECONDS).build()

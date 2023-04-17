@@ -31,7 +31,7 @@ data class UploadData(
 
 interface UploadService {
     @Multipart
-    @POST("/api/client/CloudPrint/upload")
+    @POST("/api/client/CloudPrint/Upload")
     fun upload(
         @Part file: MultipartBody.Part,
 //        @PartMap map: Map<String, RequestBody>

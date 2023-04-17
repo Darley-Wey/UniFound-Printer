@@ -14,20 +14,45 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.buttonColors
-import androidx.compose.runtime.*
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.ProgressIndicatorDefaults
+import androidx.compose.material.RadioButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +81,7 @@ import com.darley.unifound.printer.utils.ActivityCollector
 import com.darley.unifound.printer.utils.FileUtil
 import com.darley.unifound.printer.utils.ScreenUtil
 import kotlinx.coroutines.launch
+import me.jessyan.progressmanager.ProgressManager
 
 
 // Compose Activity 使用 ComponentActivity 来实现
@@ -66,14 +92,17 @@ class UploadActivity : ComponentActivity() {
         fun actionStart(context: Context, data: String) {
             val intent = Intent(context, UploadActivity::class.java)
             intent.putExtra("data", data)
-            context.startActivity(intent,
-                ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle())
+            context.startActivity(
+                intent,
+                ActivityOptions.makeSceneTransitionAnimation(context as Activity).toBundle()
+            )
         }
     }
 
     private val registerForSelectFile =
-        registerForActivityResult(ActivityResultContracts.GetContent(
-        )) { uri ->
+        registerForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
             if (uri != null) {
                 val contentResolver: ContentResolver = context.contentResolver
                 val file = FileUtil.contentToFile(uri)
@@ -105,6 +134,11 @@ class UploadActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ProgressManager.getInstance()
+            .addRequestListener(
+                "http://10.135.0.139:9130/api/client/CloudPrint/Upload",
+                viewModel.getUploadListener()
+            )
         requestedOrientation = if (ScreenUtil.isTabletWindow(this)) {
             ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         } else {
@@ -124,11 +158,18 @@ class UploadActivity : ComponentActivity() {
                 // 跳转登录页面
                 if (!viewModel.hasLoginInfo()) {
                     val intent = Intent(this@UploadActivity, LoginActivity::class.java)
-                    startActivity(intent,
-                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
+                    startActivity(
+                        intent,
+                        ActivityOptions.makeSceneTransitionAnimation(this).toBundle()
+                    )
                     finish()
                 }
                 var isUploading by viewModel.isUploading
+                val animatedProgress by animateFloatAsState(
+                    targetValue = viewModel.uploadProgress,
+                    animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+                )
+
                 Box(
                     contentAlignment = Alignment.Center,
                 ) {
@@ -149,9 +190,17 @@ class UploadActivity : ComponentActivity() {
                     // Scaffold 必须接收 innerPadding
                     { innerPadding ->
                         val paperOptions =
-                            listOf(listOf("按原文档纸型打印", "-1"), listOf("A3", "8"), listOf("A4", "9"))
+                            listOf(
+                                listOf("按原文档纸型打印", "-1"),
+                                listOf("A3", "8"),
+                                listOf("A4", "9")
+                            )
                         val duplexOptions =
-                            listOf(listOf("单面", "1"), listOf("双面长边", "2"), listOf("双面短边", "3"))
+                            listOf(
+                                listOf("单面", "1"),
+                                listOf("双面长边", "2"),
+                                listOf("双面短边", "3")
+                            )
                         val colorOptions = listOf(listOf("黑白", "1"), listOf("彩色", "2"))
                         val paper = listOf("纸型", "paperId")
                         val duplex = listOf("单双面", "duplex")
@@ -172,7 +221,9 @@ class UploadActivity : ComponentActivity() {
                                 val configuration = LocalConfiguration.current
                                 val screenHeight = configuration.screenHeightDp.dp
                                 println("height $screenHeight")
-                                FileSelector({ selectFile() })
+                                FileSelector {
+                                    selectFile()
+                                }
                                 Spacer(modifier = Modifier.height(if (screenHeight > 900.dp) 40.dp else 20.dp))
                                 Column(
                                     modifier = Modifier.width(400.dp),
@@ -195,8 +246,10 @@ class UploadActivity : ComponentActivity() {
                                     Spacer(modifier = Modifier.height(20.dp))
                                     UploadButton()
                                     About(onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW,
-                                            Uri.parse("https://gitee.com/Darley-Wey/Unifound-Printer"))
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://gitee.com/Darley-Wey/Unifound-Printer")
+                                        )
                                         startActivity(intent)
                                     })
                                 }
@@ -206,12 +259,15 @@ class UploadActivity : ComponentActivity() {
                     if (isUploading) {
                         val uploadResponse by viewModel.uploadResponseLiveData.observeAsState()
                         Log.d("UploadActivity", "上传中")
-                        Loading(state = "上传中")
+                        Loading(state = viewModel.uploadState, progress = animatedProgress)
+
                         uploadResponse?.onSuccess { response ->
                             isUploading = false
                             viewModel.setFile(null)
                             if (response.code == 0) {
                                 Log.d("UploadActivity", "上传成功${response.result!!.szJobName}")
+                                viewModel.uploadProgress = 0f
+                                viewModel.uploadState = "上传中，0%"
                                 scope.launch {
                                     scaffoldState.snackbarHostState.showSnackbar(
                                         message = "上传成功",
@@ -291,8 +347,8 @@ fun UploadTopBar(goBack: () -> Unit, goWebView: () -> Unit) {
 
 @Composable
 fun FileSelector(
-    selectFile: () -> Unit,
     viewModel: UploadViewModel = viewModel(),
+    selectFile: () -> Unit,
 ) {
     val file by viewModel.uploadFile
     Column(
@@ -630,7 +686,7 @@ fun DefaultPreview() {
                         val configuration = LocalConfiguration.current
                         val screenHeight = configuration.screenHeightDp.dp
                         println("height $screenHeight")
-                        FileSelector({ })
+                        FileSelector() {}
                         Spacer(modifier = Modifier.height(if (screenHeight > 900.dp) 40.dp else 20.dp))
                         Column(
                             modifier = Modifier.width(400.dp),
