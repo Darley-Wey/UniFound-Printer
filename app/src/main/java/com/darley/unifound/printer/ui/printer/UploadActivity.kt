@@ -35,6 +35,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.buttonColors
 import androidx.compose.material.IconButton
@@ -44,6 +45,7 @@ import androidx.compose.material.RadioButton
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -107,9 +109,77 @@ class UploadActivity : ComponentActivity() {
                 val contentResolver: ContentResolver = context.contentResolver
                 val file = FileUtil.contentToFile(uri)
                 val type = contentResolver.getType(uri)
-                viewModel.setFile(file)
-                viewModel.setFileType(type)
-                Log.d("UploadActivity", "file: $file, type: $type")
+                val fileType = file?.extension
+                val candidateType = listOf(
+                    "jpg",
+                    "jpeg",
+                    "heic",
+                    "png",
+                    "pdf",
+                    "txt",
+                    "doc",
+                    "xls",
+                    "docx",
+                    "xslx",
+                    "ppt",
+                    "pptx",
+                    "wps",
+                    "wpt",
+                    "doc",
+                    "dot",
+                    "rtf",
+                    "docx",
+                    "dotx",
+                    "docm",
+                    "dotm",
+                    "xml",
+                    "mht",
+                    "mhtml",
+                    "html",
+                    "htm",
+                    "doc",
+                    "xml",
+                    "xps",
+                    "odt",
+                    "xlsx",
+                    "xlsm",
+                    "xlsb",
+                    "xls",
+                    "csv",
+                    "xltx",
+                    "xltm",
+                    "xlt",
+                    "xls",
+                    "prn",
+                    "dif",
+                    "slk",
+                    "xla",
+                    "xlam",
+                    "xps",
+                    "xlsx",
+                    "ods",
+                    "dps",
+                    "dpt",
+                    "ppt",
+                    "pot",
+                    "pps",
+                    "pptx",
+                    "pptm",
+                    "potm",
+                    "ppsm",
+                    "pptm"
+                )
+                if (fileType != null) {
+                    if (candidateType.contains(fileType)) {
+                        viewModel.setFile(file)
+                        viewModel.setFileType(type)
+                        Log.d("UploadActivity", "file: $file, type: $type")
+                    } else {
+                        viewModel.setFile(null)
+                        viewModel.setFileType(null)
+                        viewModel.isWrongFileType = true
+                    }
+                }
             }
         }
 
@@ -170,6 +240,28 @@ class UploadActivity : ComponentActivity() {
                     animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
                 )
 
+                if (viewModel.isWrongFileType) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            viewModel.isWrongFileType = false
+                        },
+                        title = {
+                            Text(text = "不支持此种格式文件")
+                        },
+                        text = {
+                            Text(text = "请重新选择文件")
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.isWrongFileType = false
+                                }
+                            ) {
+                                Text("确定")
+                            }
+                        },
+                    )
+                }
                 Box(
                     contentAlignment = Alignment.Center,
                 ) {

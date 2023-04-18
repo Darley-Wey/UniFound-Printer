@@ -25,6 +25,7 @@ class UploadViewModel : ViewModel() {
     var uploadProgress by mutableStateOf(0.0f)
     var uploadState by mutableStateOf("上传中，0%")
     var uploadFile = mutableStateOf<File?>(null)
+    var isWrongFileType by mutableStateOf(false)
     private var uploadFileType: String? = null
     private val uploadInfo = mutableStateOf(UploadInfo())
 
@@ -117,7 +118,7 @@ class UploadViewModel : ViewModel() {
                 if (mLastPreloadingInfo!!.isFinish) {
                     //说明已经上传完成
                     Log.d("UploadActivity", "--Upload-- finish")
-                    uploadState = "上传结束，系统正在分析文件"
+                    uploadState = "上传完成，等待服务端响应"
                 }
             }
 
