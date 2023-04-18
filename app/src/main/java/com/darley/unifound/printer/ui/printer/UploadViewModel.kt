@@ -117,7 +117,9 @@ class UploadViewModel : ViewModel() {
             "ppsm",
             "pptm"
         )
-        isValidFileType = candidateType.contains(fileType)
+        if (file != null) {
+            isValidFileType = candidateType.contains(fileType)
+        }
         uploadFile.value = file
     }
 

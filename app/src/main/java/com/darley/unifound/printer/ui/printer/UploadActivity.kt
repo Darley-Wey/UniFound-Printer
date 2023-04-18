@@ -306,6 +306,11 @@ class UploadActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        WebViewActivity.actionStart(this, WebViewActivity.INDEX_URL)
+    }
 }
 
 
