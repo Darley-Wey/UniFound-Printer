@@ -25,7 +25,7 @@ class UploadViewModel : ViewModel() {
     var uploadProgress by mutableStateOf(0.0f)
     var uploadState by mutableStateOf("上传中，0%")
     var uploadFile = mutableStateOf<File?>(null)
-    var isWrongFileType by mutableStateOf(false)
+    var isValidFileType by mutableStateOf(true)
     private var uploadFileType: String? = null
     private val uploadInfo = mutableStateOf(UploadInfo())
 
@@ -57,6 +57,67 @@ class UploadViewModel : ViewModel() {
     }
 
     fun setFile(file: File?) {
+        val fileType = file?.extension
+        val candidateType = listOf(
+            "jpg",
+            "jpeg",
+            "heic",
+            "png",
+            "pdf",
+            "txt",
+            "doc",
+            "xls",
+            "docx",
+            "xslx",
+            "ppt",
+            "pptx",
+            "wps",
+            "wpt",
+            "doc",
+            "dot",
+            "rtf",
+            "docx",
+            "dotx",
+            "docm",
+            "dotm",
+            "xml",
+            "mht",
+            "mhtml",
+            "html",
+            "htm",
+            "doc",
+            "xml",
+            "xps",
+            "odt",
+            "xlsx",
+            "xlsm",
+            "xlsb",
+            "xls",
+            "csv",
+            "xltx",
+            "xltm",
+            "xlt",
+            "xls",
+            "prn",
+            "dif",
+            "slk",
+            "xla",
+            "xlam",
+            "xps",
+            "xlsx",
+            "ods",
+            "dps",
+            "dpt",
+            "ppt",
+            "pot",
+            "pps",
+            "pptx",
+            "pptm",
+            "potm",
+            "ppsm",
+            "pptm"
+        )
+        isValidFileType = candidateType.contains(fileType)
         uploadFile.value = file
     }
 

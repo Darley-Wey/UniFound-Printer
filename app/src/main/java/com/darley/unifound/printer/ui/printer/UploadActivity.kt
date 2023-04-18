@@ -110,77 +110,8 @@ class UploadActivity : ComponentActivity() {
                 val contentResolver: ContentResolver = context.contentResolver
                 val file = FileUtil.contentToFile(uri)
                 val type = contentResolver.getType(uri)
-                val fileType = file?.extension
-                val candidateType = listOf(
-                    "jpg",
-                    "jpeg",
-                    "heic",
-                    "png",
-                    "pdf",
-                    "txt",
-                    "doc",
-                    "xls",
-                    "docx",
-                    "xslx",
-                    "ppt",
-                    "pptx",
-                    "wps",
-                    "wpt",
-                    "doc",
-                    "dot",
-                    "rtf",
-                    "docx",
-                    "dotx",
-                    "docm",
-                    "dotm",
-                    "xml",
-                    "mht",
-                    "mhtml",
-                    "html",
-                    "htm",
-                    "doc",
-                    "xml",
-                    "xps",
-                    "odt",
-                    "xlsx",
-                    "xlsm",
-                    "xlsb",
-                    "xls",
-                    "csv",
-                    "xltx",
-                    "xltm",
-                    "xlt",
-                    "xls",
-                    "prn",
-                    "dif",
-                    "slk",
-                    "xla",
-                    "xlam",
-                    "xps",
-                    "xlsx",
-                    "ods",
-                    "dps",
-                    "dpt",
-                    "ppt",
-                    "pot",
-                    "pps",
-                    "pptx",
-                    "pptm",
-                    "potm",
-                    "ppsm",
-                    "pptm"
-                )
-                if (fileType != null) {
-                    if (candidateType.contains(fileType)) {
-                        viewModel.setFile(file)
-                        viewModel.setFileType(type)
-                        Log.d("UploadActivity", "file: $file, type: $type")
-                    } else {
-                        viewModel.setFile(null)
-                        viewModel.setFileType(null)
-                        viewModel.isWrongFileType = true
-                    }
-                }
+                viewModel.setFile(file)
+                viewModel.setFileType(type)
             }
         }
 
@@ -241,10 +172,11 @@ class UploadActivity : ComponentActivity() {
                     animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
                 )
 
-                if (viewModel.isWrongFileType) {
+                if (!viewModel.isValidFileType) {
                     AlertDialog(
                         onDismissRequest = {
-                            viewModel.isWrongFileType = false
+                            viewModel.isValidFileType = true
+                            viewModel.uploadFile.value = null
                         },
                         title = {
                             Text(text = "不支持此种格式文件")
@@ -255,7 +187,8 @@ class UploadActivity : ComponentActivity() {
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    viewModel.isWrongFileType = false
+                                    viewModel.isValidFileType = true
+                                    viewModel.uploadFile.value = null
                                 }
                             ) {
                                 Text("确定")
@@ -263,6 +196,7 @@ class UploadActivity : ComponentActivity() {
                         },
                     )
                 }
+
                 Box(
                     contentAlignment = Alignment.Center,
                 ) {
