@@ -173,28 +173,7 @@ class UploadActivity : ComponentActivity() {
                 )
 
                 if (!viewModel.isValidFileType) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            viewModel.isValidFileType = true
-                            viewModel.uploadFile.value = null
-                        },
-                        title = {
-                            Text(text = "不支持此种格式文件")
-                        },
-                        text = {
-                            Text(text = "请重新选择文件")
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    viewModel.isValidFileType = true
-                                    viewModel.uploadFile.value = null
-                                }
-                            ) {
-                                Text("确定")
-                            }
-                        },
-                    )
+                    WrongFileTypeDialog()
                 }
 
                 Box(
@@ -675,6 +654,35 @@ fun UploadButton(
     }
 }
 
+@Composable
+fun WrongFileTypeDialog(
+    viewModel: UploadViewModel = viewModel(),
+) {
+    if (!viewModel.isValidFileType) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.isValidFileType = true
+                viewModel.uploadFile.value = null
+            },
+            title = {
+                Text(text = "不支持此种格式文件")
+            },
+            text = {
+                Text(text = "请重新选择文件")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.isValidFileType = true
+                        viewModel.uploadFile.value = null
+                    }
+                ) {
+                    Text("确定")
+                }
+            },
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
