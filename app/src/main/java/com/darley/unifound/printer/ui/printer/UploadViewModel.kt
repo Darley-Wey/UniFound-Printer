@@ -9,8 +9,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.darley.unifound.printer.data.Repository
 import com.darley.unifound.printer.data.model.UploadInfo
-import com.darley.unifound.printer.data.network.UploadData
-import com.darley.unifound.printer.data.network.UploadResponse
+import com.darley.unifound.printer.data.network.model.UploadData
+import com.darley.unifound.printer.data.network.model.UploadRes
 import me.jessyan.progressmanager.ProgressListener
 import me.jessyan.progressmanager.body.ProgressInfo
 import okhttp3.MediaType
@@ -33,8 +33,8 @@ class UploadViewModel : ViewModel() {
 
 
     private val _uploadLiveData = MutableLiveData<UploadData>()
-    private var _uploadResponseLiveData = MutableLiveData<Result<UploadResponse>>()
-    val uploadResponseLiveData: LiveData<Result<UploadResponse>>
+    private var _uploadResponseLiveData = MutableLiveData<Result<UploadRes>>()
+    val uploadResponseLiveData: LiveData<Result<UploadRes>>
         get() = _uploadResponseLiveData
 
     fun upload() {
@@ -49,7 +49,7 @@ class UploadViewModel : ViewModel() {
                 it.BackURL,
                 it.dwTo
             )
-        } as MutableLiveData<Result<UploadResponse>>
+        } as MutableLiveData<Result<UploadRes>>
     }
 
     fun setUploadInfo(name: String, value: String) {

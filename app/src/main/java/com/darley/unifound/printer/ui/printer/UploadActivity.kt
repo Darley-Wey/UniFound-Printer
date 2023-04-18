@@ -73,6 +73,7 @@ import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.darley.unifound.printer.APP.Companion.context
 import com.darley.unifound.printer.R
+import com.darley.unifound.printer.data.network.model.UploadRes
 import com.darley.unifound.printer.ui.WebViewActivity
 import com.darley.unifound.printer.ui.login.LoginActivity
 import com.darley.unifound.printer.ui.theme.PrinterTheme
@@ -353,7 +354,7 @@ class UploadActivity : ComponentActivity() {
                         Log.d("UploadActivity", "上传中")
                         Loading(state = viewModel.uploadState, progress = animatedProgress)
 
-                        uploadResponse?.onSuccess { response ->
+                        uploadResponse?.onSuccess { response: UploadRes ->
                             isUploading = false
                             viewModel.setFile(null)
                             if (response.code == 0) {

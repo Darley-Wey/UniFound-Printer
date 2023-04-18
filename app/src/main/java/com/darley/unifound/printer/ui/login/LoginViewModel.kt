@@ -9,7 +9,7 @@ import com.darley.unifound.printer.R
 import com.darley.unifound.printer.data.Repository
 import com.darley.unifound.printer.data.dao.LoginInfoDao
 import com.darley.unifound.printer.data.model.LoginInfo
-import com.darley.unifound.printer.data.network.LoginResponse
+import com.darley.unifound.printer.data.network.model.LoginRes
 
 class LoginViewModel : ViewModel() {
 
@@ -34,7 +34,7 @@ class LoginViewModel : ViewModel() {
         loginInfoLiveData.value = LoginInfo(username, password)
     }
 
-    fun loginResult(loginResponse: LoginResponse) {
+    fun loginResult(loginResponse: LoginRes) {
         // can be launched in a separate asynchronous job
         val code = loginResponse.code
         val message = loginResponse.message

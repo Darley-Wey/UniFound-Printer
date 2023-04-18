@@ -6,10 +6,10 @@ import androidx.lifecycle.liveData
 import com.darley.unifound.printer.APP.Companion.context
 import com.darley.unifound.printer.data.dao.LoginInfoDao
 import com.darley.unifound.printer.data.model.LoginInfo
-import com.darley.unifound.printer.data.network.LoginData
-import com.darley.unifound.printer.data.network.LoginResponse
 import com.darley.unifound.printer.data.network.PrinterNetwork
-import com.darley.unifound.printer.data.network.UploadResponse
+import com.darley.unifound.printer.data.network.model.LoginData
+import com.darley.unifound.printer.data.network.model.LoginRes
+import com.darley.unifound.printer.data.network.model.UploadRes
 import com.darley.unifound.printer.isOnline
 import com.darley.unifound.printer.utils.LoginUtil
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,13 @@ object Repository {
 
     fun login(username: String, password: String) = fire() {
         if (!isOnline()) {
-            Result.success(LoginResponse(code = 1, message = "网络不可用，请连接WIFI", result = null))
+            Result.success(
+                LoginRes(
+                    code = 1,
+                    message = "网络不可用，请连接WIFI",
+                    result = null
+                )
+            )
         } else {
             // 调用挂起函数，当前协程会被阻塞，事件循环进入了被调用函数
             val publicKeyResponse = PrinterNetwork.getPublicKey()
@@ -62,9 +68,21 @@ object Repository {
         dwTo: RequestBody,
     ) = fire() {
         if (!isOnline()) {
-            Result.success(UploadResponse(code = 1, message = "网络不可用，请连接WIFI", result = null))
+            Result.success(
+                UploadRes(
+                    code = 1,
+                    message = "网络不可用，请连接WIFI",
+                    result = null
+                )
+            )
         } else if (!hasLoginInfo()) {
-            Result.success(UploadResponse(code = 2, message = "没有登陆信息，请重新登陆", result = null))
+            Result.success(
+                UploadRes(
+                    code = 2,
+                    message = "没有登陆信息，请重新登陆",
+                    result = null
+                )
+            )
         } else {
             val checkRes = PrinterNetwork.check()
             if (checkRes.code != 0) {
